@@ -13,6 +13,11 @@ NC_FILENAME=$(zenity --entry --title "NextShot" --text="Enter Filename" --ok-lab
 echo "Uploading screenshot to $NC_URL/$NC_DIR/$NC_FILENAME..."
 curl -u $NC_USERNAME:$NC_PASSWORD $NC_URL/remote.php/dav/files/$NC_USERNAME/$NC_DIR/$NC_FILENAME --upload-file $TMP_NAME
 
-curl -u $NC_USERNAME:$NC_PASSWORD -X POST -H "OCS-APIRequest: true" \
+
+FILE_TOKEN=$(curl -u $NC_USERNAME:$NC_PASSWORD -X POST -H "OCS-APIRequest: true" \
     -F "path=/$NC_DIR/$NC_FILENAME" -F "shareType=3" \
-    $NC_URL/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json
+    $NC_URL/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json | jq -r '.ocs.data.token')
+
+echo "Success! Your file has been uploaded to:"
+echo "$NC_URL/s/$FILE_TOKEN"
+echo
