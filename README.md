@@ -20,6 +20,17 @@ sudo curl -o /usr/local/bin/nextshot https://raw.githubusercontent.com/dshoreman
 sudo chmod +x /usr/local/bin/nextshot
 ```
 
+### Dependencies
+
+NextShot makes use of some third party tools to provide its functionality.
+To use it, you'll need the following:
+
+* `curl` for uploading and sharing screenshots via the NextCloud API
+* `imagemagick` for taking the screenshots
+* `jq` for parsing the JSON responses from NextCloud's APIs
+* `yad` for the config form and filename dialogs
+* `xclip` for copying the share link to clipboard
+
 ### Configuration
 
 When you first run Nextshot, you'll be prompted to enter the config details.
@@ -27,7 +38,7 @@ Follow the instructions, click Ok and you'll see a preview of your config.
 If the preview is correct, click Save. Otherwise, you can edit it before
 saving to correct any mistakes.
 
-### Manual Config
+#### Manual Config
 
 Don't like UIs? You can skip the first-run config window by manually creating your config:
 
