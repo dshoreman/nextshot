@@ -2,6 +2,7 @@
 
 _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
+_CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 
 if [ ! -d $_CONFIG_DIR ]; then
     echo "Loading first-run config window..."
@@ -41,15 +42,19 @@ and click <b>Create new app password</b>.\n:LBL" \
     echo "Config saved to $_CONFIG_FILE"
 fi
 
+if [ ! -d $_CACHE_DIR ]; then
+    mkdir -p "$_CACHE_DIR"
+fi
+
 echo "Loading config from $_CONFIG_FILE..." && . $_CONFIG_FILE && echo "Ready!"
 
-TMP_NAME="/tmp/nextshot.png"
+TMP_NAME="$_CACHE_DIR/$(date "+%Y-%m-%d %H.%M.%S").png"
 
-import $TMP_NAME
+import "$TMP_NAME"
 NC_FILENAME=$(zenity --entry --title "NextShot" --text="Enter Filename" --ok-label="Upload" 2>/dev/null)
 
 echo "Uploading screenshot to $server/$savedir/$NC_FILENAME..."
-curl -u $username:$password $server/remote.php/dav/files/$username/$savedir/$NC_FILENAME --upload-file $TMP_NAME
+curl -u $username:$password $server/remote.php/dav/files/$username/$savedir/$NC_FILENAME --upload-file "$TMP_NAME"
 
 FILE_TOKEN=$(curl -u $username:$password -X POST -H "OCS-APIRequest: true" \
     -F "path=/$savedir/$NC_FILENAME" -F "shareType=3" \
