@@ -1,7 +1,5 @@
 # NextShot
 
-
-
 NextShot is a simple utility that shares your screenshots via NextCloud,
 automatically copying the link to your clipboard.
 
@@ -54,6 +52,7 @@ There are only a few config options, all of which are required:
 | `username` | Your NextCloud username.                                                    |
 | `password` | NextCloud App password created specifically for NextShot.                   |
 | `savedir`  | Name of the folder to save screenshots in, relative to your NextCloud root. |
+| `rename`   | Whether or not to prompt for a filename before upload (`true` or `false`)   |
 
 #### Example `nextshot.conf`
 
@@ -62,6 +61,7 @@ server='https://example.com/nextcloud'
 username='jenBloggs'
 password='rcPn0-zyKC9-Dt0Vn-LG9Cn-Aa3EE'
 savedir='Screenshots'
+rename=false
 ```
 
 ## Usage

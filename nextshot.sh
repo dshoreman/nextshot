@@ -20,20 +20,22 @@ Fill out the options below and you'll be taking screenshots in no time:\n" \
         --field="To generate an App Password, open your Nextcloud instance.
 Under <b>Settings > Personal > Security</b>, enter <i>\"NextShot\"</i> for the App name
 and click <b>Create new app password</b>.\n:LBL" \
+        --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" "Screenshots")
+        "https://" "" "" "" "" true "Screenshots")
 
     if [[ $? -gt 0 ]]; then
         echo "Configuration aborted by user, exiting."
         exit
     fi
 
-    IFS='|' read -r server junk username password junk savedir junk <<< "$response"
+    IFS='|' read -r server junk username password junk rename savedir junk <<< "$response"
+    rename=${rename//\'/}
 
     mkdir -p "$_CONFIG_DIR"
 
-    tmpConfig="server=$server\nusername=$username\npassword=$password\nsavedir=$savedir"
+    tmpConfig="server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename"
 
     echo $(yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
@@ -48,12 +50,18 @@ fi
 
 echo "Loading config from $_CONFIG_FILE..." && . $_CONFIG_FILE && echo "Ready!"
 
+rename=${rename,,}
+
 TMP_NAME="$(date "+%Y-%m-%d %H.%M.%S").png"
 TMP_PATH="$_CACHE_DIR/$TMP_NAME"
+REAL_NAME="$TMP_NAME"
 
 import "$TMP_PATH"
-REAL_NAME=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$TMP_NAME" \
-    --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
+
+if [ "$rename" = true ]; then
+    REAL_NAME=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$TMP_NAME" \
+        --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
+fi
 
 echo "Uploading screenshot to $server/$savedir/$REAL_NAME..."
 curl -u $username:$password "$server/remote.php/dav/files/$username/$savedir/$REAL_NAME" --upload-file "$TMP_PATH"
