@@ -48,16 +48,18 @@ fi
 
 echo "Loading config from $_CONFIG_FILE..." && . $_CONFIG_FILE && echo "Ready!"
 
-TMP_NAME="$_CACHE_DIR/$(date "+%Y-%m-%d %H.%M.%S").png"
+TMP_NAME="$(date "+%Y-%m-%d %H.%M.%S").png"
+TMP_PATH="$_CACHE_DIR/$TMP_NAME"
 
-import "$TMP_NAME"
-NC_FILENAME=$(zenity --entry --title "NextShot" --text="Enter Filename" --ok-label="Upload" 2>/dev/null)
+import "$TMP_PATH"
+REAL_NAME=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$TMP_NAME" \
+    --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
 
-echo "Uploading screenshot to $server/$savedir/$NC_FILENAME..."
-curl -u $username:$password $server/remote.php/dav/files/$username/$savedir/$NC_FILENAME --upload-file "$TMP_NAME"
+echo "Uploading screenshot to $server/$savedir/$REAL_NAME..."
+curl -u $username:$password "$server/remote.php/dav/files/$username/$savedir/$REAL_NAME" --upload-file "$TMP_PATH"
 
 FILE_TOKEN=$(curl -u $username:$password -X POST -H "OCS-APIRequest: true" \
-    -F "path=/$savedir/$NC_FILENAME" -F "shareType=3" \
+    -F "path=/$savedir/$REAL_NAME" -F "shareType=3" \
     $server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json | jq -r '.ocs.data.token')
 
 SHARE_URL="$server/s/$FILE_TOKEN"
