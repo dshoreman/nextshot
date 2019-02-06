@@ -4,7 +4,7 @@ _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 
-if [ ! -d $_CONFIG_DIR ]; then
+if [ ! -d "$_CONFIG_DIR" ]; then
     echo "Loading first-run config window..."
 
     response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot</b>\!
@@ -25,7 +25,7 @@ and click <b>Create new app password</b>.\n:LBL" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
         "https://" "" "" "" "" true "Screenshots")
 
-    if [[ $? -gt 0 ]]; then
+    if $response; then
         echo "Configuration aborted by user, exiting."
         exit
     fi
@@ -39,16 +39,16 @@ and click <b>Create new app password</b>.\n:LBL" \
 
     echo $(yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --width=400 --height=175 --form --field=":TXT" "$tmpConfig") | sed 's/\\n/\n/g' > $_CONFIG_FILE
+        --width=400 --height=175 --form --field=":TXT" "$tmpConfig") | sed 's/\\n/\n/g' > "$_CONFIG_FILE"
 
     echo "Config saved to $_CONFIG_FILE"
 fi
 
-if [ ! -d $_CACHE_DIR ]; then
+if [ ! -d "$_CACHE_DIR" ]; then
     mkdir -p "$_CACHE_DIR"
 fi
 
-echo "Loading config from $_CONFIG_FILE..." && . $_CONFIG_FILE && echo "Ready!"
+echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
 rename=${rename,,}
 
@@ -64,15 +64,15 @@ if [ "$rename" = true ]; then
 fi
 
 echo "Uploading screenshot to $server/$savedir/$REAL_NAME..."
-curl -u $username:$password "$server/remote.php/dav/files/$username/$savedir/$REAL_NAME" --upload-file "$TMP_PATH"
+curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$REAL_NAME" --upload-file "$TMP_PATH"
 
-FILE_TOKEN=$(curl -u $username:$password -X POST -H "OCS-APIRequest: true" \
+FILE_TOKEN=$(curl -u "$username":"$password" -X POST -H "OCS-APIRequest: true" \
     -F "path=/$savedir/$REAL_NAME" -F "shareType=3" \
-    $server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json | jq -r '.ocs.data.token')
+    "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" | jq -r '.ocs.data.token')
 
 SHARE_URL="$server/s/$FILE_TOKEN"
 
 echo "Success! Your file has been uploaded to:"
-echo $SHARE_URL
-echo $SHARE_URL | \xclip -selection clipboard && \
+echo "$SHARE_URL"
+echo "$SHARE_URL" | \xclip -selection clipboard && \
     echo "Link copied to clipboard. Paste away!"
