@@ -1,21 +1,85 @@
-## NextShot
+# NextShot
 
-A simple bash script that takes a screenshot of the selected area, uploads to Nextcloud, and copies the share link to clipboard.
 
-### Usage
 
-Edit the script to set your Nextcloud base URL and upload directory:
+NextShot is a simple utility that shares your screenshots via NextCloud,
+automatically copying the link to your clipboard.
+
+NextShot is a work in progress currently limited to taking screenshots of a
+selected area. At some point (hopefully in the near future), support will be
+added for selecting a window as well as screenshots of the entire screen.
+
+## Installation
+
+Clone the repo, copy the script somewhere in your `$PATH`, and make it executable.
+
+Alternatively, you can download the raw script directly:
+
+```
+sudo curl -o /usr/local/bin/nextshot https://raw.githubusercontent.com/dshoreman/nextshot/master/nextshot.sh
+sudo chmod +x /usr/local/bin/nextshot
+```
+
+### Configuration
+
+When you first run Nextshot, you'll be prompted to enter the config details.
+Follow the instructions, click Ok and you'll see a preview of your config.
+If the preview is correct, click Save. Otherwise, you can edit it before
+saving to correct any mistakes.
+
+### Manual Config
+
+Don't like UIs? You can skip the first-run config window by manually creating your config:
+
+```
+mkdir -p ~/.config/nextshot && vim ~/.config/nextshot/nextshot.conf
+```
+
+There are only a few config options, all of which are required:
+
+| Option     | Description                                                                 |
+| ---------- | --------------------------------------------------------------------------- |
+| `server`   | NextCloud server URL, starting with `https://` and _no trailing /_          |
+| `username` | Your NextCloud username.                                                    |
+| `password` | NextCloud App password created specifically for NextShot.                   |
+| `savedir`  | Name of the folder to save screenshots in, relative to your NextCloud root. |
+
+#### Example `nextshot.conf`
 
 ```bash
-NC_URL="https://nc.mydomain.com"
-NC_DIR="Screenshots"
+server='https://example.com/nextcloud'
+username='jenBloggs'
+password='rcPn0-zyKC9-Dt0Vn-LG9Cn-Aa3EE'
+savedir='Screenshots'
 ```
-Note the directory must exist and is relative to your user root.
 
-Finally, set `$NC_USERNAME` and `$NC_PASSWORD` to your login details, then run `./nextshot.sh`
+## Usage
 
-### Notes
+NextShot can be used directly or via a keybind in your window manager.
 
-This script is incredibly dumb. It doesn't check status of responses, or even if you type a valid filename.
+### In a Terminal
 
-It assumes everything works, and it's likely it could break as a result.
+Simply run `nextshot` and select the area you want to capture.
+NextShot will then prompt you for a filename before uploading,
+or you can leave it as the default and hit enter.
+
+If you ran `nextshot` too soon or decide you don't want to take
+the screenshot after all, hit `Ctrl+C` to abort the selection.
+
+### Usage via Keybind (i3-wm)
+
+To run NextShot when you press Print Screen, add the following to your i3 config:
+
+```
+bindsym --release Print exec nextshot
+```
+
+Note that due to limitations with ImageMagick's `import` tool, it is not possible
+to abort selection when it's detached from a shell such as when called by i3.
+
+## Caveats
+* NextShot will not create `savedir` for you, the directory must already exist.
+* It doesn't check status of responses, it simply assumes everything works.
+    Probably not a big deal, but don't expect it to work if your server is down.
+* It won't protect you from typos. If you forget to give your file an extension,
+    NextCloud will force download when you visit the share link.
