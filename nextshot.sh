@@ -50,6 +50,7 @@ and click <b>Create new app password</b>.\n:LBL" \
         --width=400 --height=175 --form --field=":TXT" "$tmpConfig") | sed 's/\\n/\n/g' > "$_CONFIG_FILE"
 
     echo "Config saved to $_CONFIG_FILE"
+    exit 0
 fi
 
 if [ ! -d "$_CACHE_DIR" ]; then
