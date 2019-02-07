@@ -12,6 +12,14 @@ function filter_key {
     grep -Po "\"$1\": *\"\K[^\"]*"
 }
 
+function is_wayland {
+    [ -z ${WAYLAND_DISPLAY+x} ] && return 1
+}
+
+function clipboard {
+    is_wayland && wl-copy || xclip -selection clipboard
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
     if ! has yad; then
         echo "Yad is required to display for initial configuration of NextShot."
@@ -87,5 +95,5 @@ SHARE_URL="$server/s/$FILE_TOKEN"
 
 echo "Success! Your file has been uploaded to:"
 echo "$SHARE_URL"
-echo "$SHARE_URL" | \xclip -selection clipboard && \
+echo "$SHARE_URL" | clipboard && \
     echo "Link copied to clipboard. Paste away!"

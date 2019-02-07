@@ -25,7 +25,7 @@ To use it, you'll need the following:
 
 * `curl` for uploading and sharing screenshots via the NextCloud API
 * `imagemagick` for taking the screenshots
-* `xclip` for copying the share link to clipboard
+* `xclip` **or** `wl-clipboard` for copying the share link to clipboard
 * `yad` for the config form and filename dialogs (**optional**)
 
 ### Configuration
