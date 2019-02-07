@@ -2,22 +2,86 @@
 
 _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
-_CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
+
+function nextshot {
+    load_config
+    init_cache
+
+    local url="$(nc_share "$(take_screenshot | nc_upload)" | make_url)"
+
+    echo "$url" | clipboard && \
+        echo "Link $url copied to clipboard. Paste away!"
+}
 
 function has {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
-function filter_key {
-    grep -Po "\"$1\": *\"\K[^\"]*"
+function clipboard {
+    is_wayland && wl-copy || xclip -selection clipboard
 }
 
 function is_wayland {
     [ -z ${WAYLAND_DISPLAY+x} ] && return 1
 }
 
-function clipboard {
-    is_wayland && wl-copy || xclip -selection clipboard
+function filter_key {
+    grep -Po "\"$1\": *\"\K[^\"]*"
+}
+
+function init_cache {
+    _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
+
+    [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
+}
+
+function load_config {
+    echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
+
+    rename=${rename,,}
+}
+
+function take_screenshot {
+    local filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+
+    import "$_CACHE_DIR/$filename"
+
+    attempt_rename "$filename"
+}
+
+function attempt_rename {
+    if [ ! "$rename" = true ] || ! has yad; then echo $1
+    else
+        local newname=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
+            --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
+
+        if [ ! "$1" = "$newname" ]; then
+            mv "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname"
+        fi
+
+        echo $newname
+    fi
+}
+
+function nc_upload {
+    local filename; read filename
+
+    curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
+        --upload-file "$_CACHE_DIR/$filename"
+
+    echo $filename
+}
+
+function nc_share {
+    curl -u "$username":"$password" -X POST -H "OCS-APIRequest: true" \
+        "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
+        -F "path=/$savedir/$1" -F "shareType=3"
+}
+
+function make_url {
+    local json; read json
+
+    echo "$server/s/$(echo $json | filter_key "token")"
 }
 
 if [ ! -d "$_CONFIG_DIR" ]; then
@@ -65,35 +129,4 @@ and click <b>Create new app password</b>.\n:LBL" \
     exit 0
 fi
 
-if [ ! -d "$_CACHE_DIR" ]; then
-    mkdir -p "$_CACHE_DIR"
-fi
-
-echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
-
-rename=${rename,,}
-
-TMP_NAME="$(date "+%Y-%m-%d %H.%M.%S").png"
-TMP_PATH="$_CACHE_DIR/$TMP_NAME"
-REAL_NAME="$TMP_NAME"
-
-import "$TMP_PATH"
-
-if [ "$rename" = true ] && has yad; then
-    REAL_NAME=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$TMP_NAME" \
-        --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
-fi
-
-echo "Uploading screenshot to $server/$savedir/$REAL_NAME..."
-curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$REAL_NAME" --upload-file "$TMP_PATH"
-
-FILE_TOKEN=$(curl -u "$username":"$password" -X POST -H "OCS-APIRequest: true" \
-    -F "path=/$savedir/$REAL_NAME" -F "shareType=3" \
-    "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" | filter_key "token")
-
-SHARE_URL="$server/s/$FILE_TOKEN"
-
-echo "Success! Your file has been uploaded to:"
-echo "$SHARE_URL"
-echo "$SHARE_URL" | clipboard && \
-    echo "Link copied to clipboard. Paste away!"
+nextshot
