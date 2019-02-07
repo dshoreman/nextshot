@@ -8,6 +8,10 @@ function has {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
+function filter_key {
+    grep -Po "\"$1\": *\"\K[^\"]*"
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
     if ! has yad; then
         echo "Yad is required to display for initial configuration of NextShot."
@@ -77,7 +81,7 @@ curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir
 
 FILE_TOKEN=$(curl -u "$username":"$password" -X POST -H "OCS-APIRequest: true" \
     -F "path=/$savedir/$REAL_NAME" -F "shareType=3" \
-    "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" | jq -r '.ocs.data.token')
+    "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" | filter_key "token")
 
 SHARE_URL="$server/s/$FILE_TOKEN"
 
