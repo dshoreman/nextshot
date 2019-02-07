@@ -4,8 +4,16 @@ _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 
+function has {
+    type "$1" >/dev/null 2>&1 || return 1
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
-    echo "Loading first-run config window..."
+    if ! has yad; then
+        echo "Yad is required to display for initial configuration of NextShot."
+        echo "Either install Yad, or configure NextShot manually."
+        exit 1
+    fi
 
     response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot</b>\!
 
@@ -58,7 +66,7 @@ REAL_NAME="$TMP_NAME"
 
 import "$TMP_PATH"
 
-if [ "$rename" = true ]; then
+if [ "$rename" = true ] && has yad; then
     REAL_NAME=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$TMP_NAME" \
         --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
 fi

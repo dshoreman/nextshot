@@ -26,7 +26,7 @@ To use it, you'll need the following:
 * `curl` for uploading and sharing screenshots via the NextCloud API
 * `imagemagick` for taking the screenshots
 * `jq` for parsing the JSON responses from NextCloud's APIs
-* `yad` for the config form and filename dialogs
+* `yad` for the config form and filename dialogs (**optional**)
 * `xclip` for copying the share link to clipboard
 
 ### Configuration
@@ -54,7 +54,7 @@ There are only a few config options, all of which are required:
 | `savedir`  | Name of the folder to save screenshots in, relative to your NextCloud root. |
 | `rename`   | Whether or not to prompt for a filename before upload (`true` or `false`)   |
 
-#### Example `nextshot.conf`
+##### Example `nextshot.conf`
 
 ```bash
 server='https://example.com/nextcloud'
