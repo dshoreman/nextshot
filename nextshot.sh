@@ -6,8 +6,9 @@ _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 nextshot() {
     load_config
     init_cache
+    local url
 
-    local url="$(nc_share "$(take_screenshot | nc_upload)" | make_url)"
+    url="$(nc_share "$(take_screenshot | nc_upload)" | make_url)"
 
     echo "$url" | clipboard && \
         echo "Link $url copied to clipboard. Paste away!"
@@ -18,7 +19,10 @@ has() {
 }
 
 clipboard() {
-    is_wayland && wl-copy || xclip -selection clipboard
+    if is_wayland; then wl-copy
+    else
+        xclip -selection clipboard
+    fi
 }
 
 is_wayland() {
@@ -36,13 +40,14 @@ init_cache() {
 }
 
 load_config() {
+    # shellcheck disable=SC1090
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
     rename=${rename,,}
 }
 
 take_screenshot() {
-    local filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    local filename; filename="$(date "+%Y-%m-%d %H.%M.%S").png"
 
     import "$_CACHE_DIR/$filename"
 
@@ -50,26 +55,28 @@ take_screenshot() {
 }
 
 attempt_rename() {
-    if [ ! "$rename" = true ] || ! has yad; then echo $1
+    local newname
+
+    if [ ! "$rename" = true ] || ! has yad; then echo "$1"
     else
-        local newname=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
+        newname=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
             --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
 
         if [ ! "$1" = "$newname" ]; then
             mv "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname"
         fi
 
-        echo $newname
+        echo "$newname"
     fi
 }
 
 nc_upload() {
-    local filename; read filename
+    local filename; read -r filename
 
     curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
         --upload-file "$_CACHE_DIR/$filename"
 
-    echo $filename
+    echo "$filename"
 }
 
 nc_share() {
@@ -79,9 +86,9 @@ nc_share() {
 }
 
 make_url() {
-    local json; read json
+    local json; read -r json
 
-    echo "$server/s/$(echo $json | filter_key "token")"
+    echo "$server/s/$(echo "$json" | filter_key "token")"
 }
 
 if [ ! -d "$_CONFIG_DIR" ]; then
@@ -114,16 +121,16 @@ and click <b>Create new app password</b>.\n:LBL" \
         exit
     fi
 
-    IFS='|' read -r server junk username password junk rename savedir junk <<< "$response"
+    IFS='|' read -r server _ username password _ rename savedir _ <<< "$response"
     rename=${rename//\'/}
 
     mkdir -p "$_CONFIG_DIR"
 
     tmpConfig="server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename"
 
-    echo $(yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
+    yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --width=400 --height=175 --form --field=":TXT" "$tmpConfig") | sed 's/\\n/\n/g' > "$_CONFIG_FILE"
+        --width=400 --height=175 --form --field=":TXT" "$tmpConfig" | sed 's/\\n/\n/g' > "$_CONFIG_FILE"
 
     echo "Config saved to $_CONFIG_FILE"
     exit 0
