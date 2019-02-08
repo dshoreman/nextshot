@@ -3,7 +3,7 @@
 _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
-function nextshot {
+nextshot() {
     load_config
     init_cache
 
@@ -13,35 +13,35 @@ function nextshot {
         echo "Link $url copied to clipboard. Paste away!"
 }
 
-function has {
+has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
-function clipboard {
+clipboard() {
     is_wayland && wl-copy || xclip -selection clipboard
 }
 
-function is_wayland {
+is_wayland() {
     [ -z ${WAYLAND_DISPLAY+x} ] && return 1
 }
 
-function filter_key {
+filter_key() {
     grep -Po "\"$1\": *\"\K[^\"]*"
 }
 
-function init_cache {
+init_cache() {
     _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 
     [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
 }
 
-function load_config {
+load_config() {
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
     rename=${rename,,}
 }
 
-function take_screenshot {
+take_screenshot() {
     local filename="$(date "+%Y-%m-%d %H.%M.%S").png"
 
     import "$_CACHE_DIR/$filename"
@@ -49,7 +49,7 @@ function take_screenshot {
     attempt_rename "$filename"
 }
 
-function attempt_rename {
+attempt_rename() {
     if [ ! "$rename" = true ] || ! has yad; then echo $1
     else
         local newname=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
@@ -63,7 +63,7 @@ function attempt_rename {
     fi
 }
 
-function nc_upload {
+nc_upload() {
     local filename; read filename
 
     curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
@@ -72,13 +72,13 @@ function nc_upload {
     echo $filename
 }
 
-function nc_share {
+nc_share() {
     curl -u "$username":"$password" -X POST -H "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
         -F "path=/$savedir/$1" -F "shareType=3"
 }
 
-function make_url {
+make_url() {
     local json; read json
 
     echo "$server/s/$(echo $json | filter_key "token")"
