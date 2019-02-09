@@ -4,8 +4,8 @@ NextShot is a simple utility that shares your screenshots via NextCloud,
 automatically copying the link to your clipboard.
 
 NextShot is a work in progress currently limited to taking screenshots of a
-selected area. At some point (hopefully in the near future), support will be
-added for selecting a window as well as screenshots of the entire screen.
+selected window or area, or the entire desktop. At some point, support will be
+added for taking screenshots of a single screen in a multi-monitor environment.
 
 ## Installation
 
@@ -69,19 +69,25 @@ NextShot can be used directly or via a keybind in your window manager.
 
 ### In a Terminal
 
-Simply run `nextshot` and select the area you want to capture.
-NextShot will then prompt you for a filename before uploading,
-or you can leave it as the default and hit enter.
+Simply run `nextshot` and select the area (or click in the window)
+you want to capture. To capture the entire display, run NextShot with
+the `--fullscreen` argument.
+
+If you enabled the `rename` option in your config, NextShot will then
+prompt you for a filename before uploading, or you can leave it as the
+default and hit enter. With `rename` disabled, upload is fully automatic.
 
 If you ran `nextshot` too soon or decide you don't want to take
 the screenshot after all, hit `Ctrl+C` to abort the selection.
 
 ### Usage via Keybind (i3-wm)
 
-To run NextShot when you press Print Screen, add the following to your i3 config:
+Add the following to your i3 config to have NextShot's different
+modes bound to the Print Screen key:
 
 ```
-bindsym --release Print exec nextshot
+bindsym --release Print exec "nextshot --fullscreen"
+bindsym --release Shift+Print exec nextshot
 ```
 
 Note that due to limitations with ImageMagick's `import` tool, it is not possible
