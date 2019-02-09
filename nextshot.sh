@@ -6,12 +6,34 @@ _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 nextshot() {
     load_config
     init_cache
+    parse_opts "$1"
     local url
 
     url="$(nc_share "$(take_screenshot | nc_upload)" | make_url)"
 
     echo "$url" | clipboard && \
         echo "Link $url copied to clipboard. Paste away!"
+}
+
+parse_opts() {
+    case "$1" in
+        --window)
+            echo "Window mode is currently unsupported."
+            echo "Use --selection instead, clicking in the window you'd like to capture."
+            exit 1
+            ;;
+        --fullscreen)
+            echo "Fullscreen mode is currently unsupported."
+            exit 1
+            ;;
+        --selection)
+            mode="selection"
+            echo "Mode set to selection"
+            ;;
+        *)
+            echo "Invalid option $1"
+            exit 1
+    esac
 }
 
 has() {
@@ -136,4 +158,4 @@ and click <b>Create new app password</b>.\n:LBL" \
     exit 0
 fi
 
-nextshot
+nextshot "${1:---selection}"
