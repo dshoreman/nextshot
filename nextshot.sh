@@ -23,17 +23,15 @@ parse_opts() {
             exit 1
             ;;
         --fullscreen)
-            echo "Fullscreen mode is currently unsupported."
-            exit 1
-            ;;
+            mode="fullscreen" ;;
         --selection)
-            mode="selection"
-            echo "Mode set to selection"
-            ;;
+            mode="selection" ;;
         *)
             echo "Invalid option $1"
             exit 1
     esac
+
+    echo "Screenshot mode set to $mode"
 }
 
 has() {
@@ -70,8 +68,13 @@ load_config() {
 
 take_screenshot() {
     local filename; filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    local args;
 
-    import "$_CACHE_DIR/$filename"
+    if [ "$mode" = "fullscreen" ]; then
+        args="-window root"
+    fi
+
+    import $args "$_CACHE_DIR/$filename"
 
     attempt_rename "$filename"
 }
