@@ -4,19 +4,19 @@ _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
 nextshot() {
-    parse_opts "$1"
+    parse_opts "$@"
     load_config
     init_cache
     local url
 
-    url="$(nc_share "$(take_screenshot | nc_upload)" | make_url)"
+    url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
 
     echo "$url" | clipboard && \
         echo "Link $url copied to clipboard. Paste away!"
 }
 
 parse_opts() {
-    case "$1" in
+    case "${1:---selection}" in
         --window)
             echo "Window mode is currently unsupported."
             echo "Use --selection instead, clicking in the window you'd like to capture."
@@ -26,6 +26,18 @@ parse_opts() {
             mode="fullscreen" ;;
         --selection)
             mode="selection" ;;
+        --file)
+            if [ -z ${2+x} ]; then
+                echo "--file option requires a filename"
+                exit 1
+            elif [ ! -f "$PWD/$2" ]; then
+                echo "File $2 could not be found!"
+                exit 1
+            fi
+
+            mode="file"
+            file="$2"
+            ;;
         --help)
             echo "Usage:"
             echo "  nextshot [OPTION]"
@@ -83,6 +95,14 @@ load_config() {
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
     rename=${rename,,}
+}
+
+cache_image() {
+    if [ "$mode" = "file" ]; then
+        cp "$PWD/$file" "$_CACHE_DIR/$file" && echo "$file"
+    else
+        take_screenshot
+    fi
 }
 
 take_screenshot() {
@@ -180,4 +200,4 @@ and click <b>Create new app password</b>.\n:LBL" \
     exit 0
 fi
 
-nextshot "${1:---selection}"
+nextshot "$@"

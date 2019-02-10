@@ -80,6 +80,17 @@ default and hit enter. With `rename` disabled, upload is fully automatic.
 If you ran `nextshot` too soon or decide you don't want to take
 the screenshot after all, hit `Ctrl+C` to abort the selection.
 
+#### Uploading an Existing File
+
+NextShot is able to upload any file already on your system:
+
+```sh
+cd ~/Pictures
+nextshot --file fluffy-kittens.jpg
+```
+
+Note that this bypasses the rename prompt and may overwrite existing files.
+
 ### Usage via Keybind (i3-wm)
 
 Add the following to your i3 config to have NextShot's different
