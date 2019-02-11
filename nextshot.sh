@@ -99,13 +99,13 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    local args
+    local file; file="$_CACHE_DIR/$1"
 
     if [ "$mode" = "selection" ]; then
-        args="-g \"$(slurp -d)\""
+        grim -g "$(slurp -d)" "$file"
+    else
+        grim "$file"
     fi
-
-    grim $args "$_CACHE_DIR/$1"
 }
 
 shoot_x() {
