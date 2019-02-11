@@ -58,7 +58,7 @@ clipboard() {
 }
 
 is_wayland() {
-    [ -z ${WAYLAND_DISPLAY+x} ] && return 1
+    [ -n "${WAYLAND_DISPLAY+x}" ]
 }
 
 filter_key() {
