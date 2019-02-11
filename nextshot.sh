@@ -88,15 +88,34 @@ cache_image() {
 
 take_screenshot() {
     local filename; filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+
+    if is_wayland; then
+        shoot_wayland "$filename"
+    else
+        shoot_x "$filename"
+    fi
+
+    attempt_rename "$filename"
+}
+
+shoot_wayland() {
+    local args
+
+    if [ "$mode" = "selection" ]; then
+        args="-g \"$(slurp -d)\""
+    fi
+
+    grim $args "$_CACHE_DIR/$1"
+}
+
+shoot_x() {
     local args;
 
     if [ "$mode" = "fullscreen" ]; then
         args="-window root"
     fi
 
-    import $args "$_CACHE_DIR/$filename"
-
-    attempt_rename "$filename"
+    import $args "$_CACHE_DIR/$1"
 }
 
 attempt_rename() {
