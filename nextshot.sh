@@ -119,13 +119,13 @@ nc_upload() {
     local filename; read -r filename
 
     curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
-        --upload-file "$_CACHE_DIR/$filename"
+        -L --post301 --upload-file "$_CACHE_DIR/$filename"
 
     echo "$filename"
 }
 
 nc_share() {
-    curl -u "$username":"$password" -X POST -H "OCS-APIRequest: true" \
+    curl -u "$username":"$password" -X POST --post301 -LH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
         -F "path=/$savedir/$1" -F "shareType=3"
 }
