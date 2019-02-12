@@ -105,14 +105,15 @@ cache_image() {
 
 take_screenshot() {
     local filename; filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    local slop; slop="slop -c 1,0.4,0.7,0.4 -lb 3"
     local args;
 
     if [ "$mode" = "fullscreen" ]; then
         args="-window root"
     elif [ "$mode" = "selection" ]; then
-        args="-window root -crop $(slop -f "%g" -t 0)"
+        args="-window root -crop $($slop -f "%g" -t 0)"
     elif [ "$mode" = "window" ]; then
-        args="-window $(slop -f "%i" -t 999999)"
+        args="-window $($slop -f "%i" -t 999999)"
     fi
 
     import $args "$_CACHE_DIR/$filename"
