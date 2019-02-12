@@ -18,10 +18,7 @@ nextshot() {
 parse_opts() {
     case "${1:---selection}" in
         --window)
-            echo "Window mode is currently unsupported."
-            echo "Use --selection instead, clicking in the window you'd like to capture."
-            exit 1
-            ;;
+            mode="window" ;;
         --fullscreen)
             mode="fullscreen" ;;
         --selection)
@@ -49,6 +46,7 @@ parse_opts() {
             echo "Screenshot Modes:"
             echo "  --selection   Select a window or area to capture"
             echo "  --fullscreen  Take a screenshot of the entire X/Wayland display"
+            echo "  --window      Capture a single window"
             echo
             exit 0
             ;;
@@ -113,6 +111,8 @@ take_screenshot() {
         args="-window root"
     elif [ "$mode" = "selection" ]; then
         args="-window root -crop $(slop -f "%g")"
+    elif [ "$mode" = "window" ]; then
+        args="-window $(slop -f "%i" -t 999999)"
     fi
 
     import $args "$_CACHE_DIR/$filename"
