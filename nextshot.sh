@@ -159,7 +159,8 @@ make_url() {
 
 send_notification() {
     if has notify-send; then
-        notify-send -u normal -t 5000 -i insert-link NextShot "Your link is ready to paste!"
+        notify-send -u normal -t 5000 -i insert-link NextShot \
+            "<a href=\"$url\">Your link</a> is ready to paste!"
     else
         echo "Link $url copied to clipboard. Paste away!"
     fi
