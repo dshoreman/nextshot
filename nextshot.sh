@@ -44,8 +44,8 @@ parse_opts() {
             echo "  --version     Output version information and exit"
             echo
             echo "Screenshot Modes:"
-            echo "  --selection   Select a window or area to capture"
-            echo "  --fullscreen  Take a screenshot of the entire X/Wayland display"
+            echo "  --fullscreen  Capture the entire X/Wayland display"
+            echo "  --selection   Capture only the selected area"
             echo "  --window      Capture a single window"
             echo
             exit 0
