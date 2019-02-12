@@ -11,17 +11,11 @@ nextshot() {
 
     url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
 
-    echo "$url" | clipboard && send_notification
+    echo "$url" | to_clipboard && send_notification
 }
 
 parse_opts() {
     case "${1:---selection}" in
-        --window)
-            mode="window" ;;
-        --fullscreen)
-            mode="fullscreen" ;;
-        --selection)
-            mode="selection" ;;
         --file)
             if [ -z ${2+x} ]; then
                 echo "--file option requires a filename"
@@ -34,6 +28,14 @@ parse_opts() {
             mode="file"
             file="$2"
             ;;
+        --fullscreen)
+            mode="fullscreen" ;;
+        --paste)
+            mode="clipboard" ;;
+        --selection)
+            mode="selection" ;;
+        --window)
+            mode="window" ;;
         --help)
             echo "Usage:"
             echo "  nextshot [OPTION]"
@@ -66,10 +68,17 @@ has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
-clipboard() {
+to_clipboard() {
     if is_wayland; then wl-copy
     else
         xclip -selection clipboard
+    fi
+}
+
+from_clipboard() {
+    if is_wayland; then wl-paste
+    else
+        xclip -selection clipboard -o
     fi
 }
 
@@ -113,9 +122,13 @@ take_screenshot() {
         args="-window root -crop $($slop -f "%g" -t 0)"
     elif [ "$mode" = "window" ]; then
         args="-window $($slop -f "%i" -t 999999)"
+    elif [ "$mode" = "clipboard" ]; then
+        from_clipboard > "$_CACHE_DIR/$filename"
     fi
 
-    import $args "$_CACHE_DIR/$filename"
+    if [ ! "$mode" = "clipboard" ]; then
+        import $args "$_CACHE_DIR/$filename"
+    fi
 
     attempt_rename "$filename"
 }
