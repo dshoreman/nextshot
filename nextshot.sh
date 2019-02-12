@@ -111,6 +111,8 @@ take_screenshot() {
 
     if [ "$mode" = "fullscreen" ]; then
         args="-window root"
+    elif [ "$mode" = "selection" ]; then
+        args="-window root -crop $(slop -f "%g")"
     fi
 
     import $args "$_CACHE_DIR/$filename"
