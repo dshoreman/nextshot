@@ -110,7 +110,7 @@ take_screenshot() {
     if [ "$mode" = "fullscreen" ]; then
         args="-window root"
     elif [ "$mode" = "selection" ]; then
-        args="-window root -crop $(slop -f "%g")"
+        args="-window root -crop $(slop -f "%g" -t 0)"
     elif [ "$mode" = "window" ]; then
         args="-window $(slop -f "%i" -t 999999)"
     fi
