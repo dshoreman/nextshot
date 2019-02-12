@@ -11,8 +11,7 @@ nextshot() {
 
     url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
 
-    echo "$url" | clipboard && \
-        echo "Link $url copied to clipboard. Paste away!"
+    echo "$url" | clipboard && send_notification
 }
 
 parse_opts() {
@@ -156,6 +155,14 @@ make_url() {
     local json; read -r json
 
     echo "$server/s/$(echo "$json" | filter_key "token")"
+}
+
+send_notification() {
+    if has notify-send; then
+        notify-send -u normal -t 5000 -i insert-link NextShot "Your link is ready to paste!"
+    else
+        echo "Link $url copied to clipboard. Paste away!"
+    fi
 }
 
 if [ ! -d "$_CONFIG_DIR" ]; then
