@@ -4,9 +4,9 @@ _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
 nextshot() {
+    parse_opts "$1"
     load_config
     init_cache
-    parse_opts "$1"
     local url
 
     url="$(nc_share "$(take_screenshot | nc_upload)" | make_url)"
@@ -26,8 +26,27 @@ parse_opts() {
             mode="fullscreen" ;;
         --selection)
             mode="selection" ;;
+        --help)
+            echo "Usage:"
+            echo "  nextshot [OPTION]"
+            echo
+            echo "General Options:"
+            echo "  --help        Display this help and exit"
+            echo "  --version     Output version information and exit"
+            echo
+            echo "Screenshot Modes:"
+            echo "  --selection   Select a window or area to capture"
+            echo "  --fullscreen  Take a screenshot of the entire X/Wayland display"
+            echo
+            exit 0
+            ;;
+        --version)
+            echo "NextShot v0.2.1"
+            exit 0
+            ;;
         *)
-            echo "Invalid option $1"
+            echo "NextShot: Unrecognised option '$1'"
+            echo "Try 'nextshot --help' for more information."
             exit 1
     esac
 
