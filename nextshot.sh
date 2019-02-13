@@ -129,9 +129,10 @@ cache_image() {
 }
 
 take_screenshot() {
-    local filename; filename="$(date "+%Y-%m-%d %H.%M.%S").png"
-    local slop; slop="slop -c 1,0.4,0.7,0.4 -lb 3"
-    local args;
+    local args filename slop
+
+    filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    slop="slop -c 1,0.4,0.7,0.4 -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args="-window root"
