@@ -93,7 +93,7 @@ check_clipboard() {
 }
 
 from_clipboard() {
-    if is_wayland; then wl-paste
+    if is_wayland; then wl-paste -t image/png
     else
         xclip -selection clipboard -t image/png -o
     fi
