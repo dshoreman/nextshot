@@ -11,18 +11,11 @@ nextshot() {
 
     url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
 
-    echo "$url" | clipboard && \
-        echo "Link $url copied to clipboard. Paste away!"
+    echo "$url" | to_clipboard && send_notification
 }
 
 parse_opts() {
     case "${1:---selection}" in
-        --window)
-            mode="window" ;;
-        --fullscreen)
-            mode="fullscreen" ;;
-        --selection)
-            mode="selection" ;;
         --file)
             if [ -z ${2+x} ]; then
                 echo "--file option requires a filename"
@@ -35,6 +28,20 @@ parse_opts() {
             mode="file"
             file="$2"
             ;;
+        --fullscreen)
+            mode="fullscreen" ;;
+        --paste)
+            if ! check_clipboard; then
+                echo "Clipboard does not contain an image, aborting."
+                exit 1
+            fi
+
+            mode="clipboard"
+            ;;
+        --selection)
+            mode="selection" ;;
+        --window)
+            mode="window" ;;
         --help)
             echo "Usage:"
             echo "  nextshot [OPTION]"
@@ -51,7 +58,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.2.1"
+            echo "NextShot v0.4.0"
             exit 0
             ;;
         *)
@@ -67,10 +74,28 @@ has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
-clipboard() {
+to_clipboard() {
     if is_wayland; then wl-copy
     else
         xclip -selection clipboard
+    fi
+}
+
+check_clipboard() {
+    local cmd
+
+    if is_wayland; then cmd="wl-paste -l"
+    else
+        cmd="xclip -selection clipboard -o -t TARGETS"
+    fi
+
+    $cmd | grep image > /dev/null
+}
+
+from_clipboard() {
+    if is_wayland; then wl-paste -t image/png
+    else
+        xclip -selection clipboard -t image/png -o
     fi
 }
 
@@ -104,9 +129,10 @@ cache_image() {
 }
 
 take_screenshot() {
-    local filename; filename="$(date "+%Y-%m-%d %H.%M.%S").png"
-    local slop; slop="slop -c 1,0.4,0.7,0.4 -lb 3"
-    local args;
+    local args filename slop
+
+    filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    slop="slop -c 1,0.4,0.7,0.4 -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args="-window root"
@@ -114,9 +140,13 @@ take_screenshot() {
         args="-window root -crop $($slop -f "%g" -t 0)"
     elif [ "$mode" = "window" ]; then
         args="-window $($slop -f "%i" -t 999999)"
+    elif [ "$mode" = "clipboard" ]; then
+        from_clipboard > "$_CACHE_DIR/$filename"
     fi
 
-    import $args "$_CACHE_DIR/$filename"
+    if [ ! "$mode" = "clipboard" ]; then
+        import $args "$_CACHE_DIR/$filename"
+    fi
 
     attempt_rename "$filename"
 }
@@ -156,6 +186,15 @@ make_url() {
     local json; read -r json
 
     echo "$server/s/$(echo "$json" | filter_key "token")"
+}
+
+send_notification() {
+    if has notify-send; then
+        notify-send -u normal -t 5000 -i insert-link NextShot \
+            "<a href=\"$url\">Your link</a> is ready to paste!"
+    else
+        echo "Link $url copied to clipboard. Paste away!"
+    fi
 }
 
 if [ ! -d "$_CONFIG_DIR" ]; then
