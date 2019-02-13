@@ -31,7 +31,13 @@ parse_opts() {
         --fullscreen)
             mode="fullscreen" ;;
         --paste)
-            mode="clipboard" ;;
+            if ! check_clipboard; then
+                echo "Clipboard does not contain an image, aborting."
+                exit 1
+            fi
+
+            mode="clipboard"
+            ;;
         --selection)
             mode="selection" ;;
         --window)
@@ -73,6 +79,17 @@ to_clipboard() {
     else
         xclip -selection clipboard
     fi
+}
+
+check_clipboard() {
+    local cmd
+
+    if is_wayland; then cmd="wl-paste -l"
+    else
+        cmd="xclip -selection clipboard -o -t TARGETS"
+    fi
+
+    $cmd | grep image > /dev/null
 }
 
 from_clipboard() {
