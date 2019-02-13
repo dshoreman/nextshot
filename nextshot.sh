@@ -78,7 +78,7 @@ to_clipboard() {
 from_clipboard() {
     if is_wayland; then wl-paste
     else
-        xclip -selection clipboard -o
+        xclip -selection clipboard -t image/png -o
     fi
 }
 
