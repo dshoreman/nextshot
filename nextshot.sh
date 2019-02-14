@@ -51,9 +51,21 @@ parse_opts() {
             echo "  --version     Output version information and exit"
             echo
             echo "Screenshot Modes:"
+            echo
+            echo " Use these options to take a new screenshot and have"
+            echo " NextShot automatically upload it to Nextcloud."
+            echo
             echo "  --fullscreen  Capture the entire X/Wayland display"
             echo "  --selection   Capture only the selected area"
             echo "  --window      Capture a single window"
+            echo
+            echo "Upload Modes:"
+            echo
+            echo " Use these options when you have an existing image"
+            echo " that you want to upload to Nextcloud."
+            echo
+            echo "  --file FILE   Upload from the local filesystem"
+            echo "  --paste       Upload from the system clipboard"
             echo
             exit 0
             ;;
