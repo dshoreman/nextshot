@@ -53,6 +53,7 @@ There are only a few config options, all of which are required:
 | `password` | NextCloud App password created specifically for NextShot.                   |
 | `savedir`  | Name of the folder to save screenshots in, relative to your NextCloud root. |
 | `rename`   | Whether or not to prompt for a filename before upload (`true` or `false`)   |
+| `hlColour` | Colour to use for selection in RGBA, e.g. `0.3,0.4,0.6,0.4`                 |
 
 ##### Example `nextshot.conf`
 

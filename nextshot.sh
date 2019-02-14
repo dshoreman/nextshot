@@ -144,7 +144,7 @@ take_screenshot() {
     local args filename slop
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
-    slop="slop -c 1,0.4,0.7,0.4 -lb 3"
+    slop="slop -c ${hlColour:-1,0.4,0.7,0.4} -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
