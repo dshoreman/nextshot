@@ -51,14 +51,26 @@ parse_opts() {
             echo "  --version     Output version information and exit"
             echo
             echo "Screenshot Modes:"
+            echo
+            echo " Use these options to take a new screenshot and have"
+            echo " NextShot automatically upload it to Nextcloud."
+            echo
             echo "  --fullscreen  Capture the entire X/Wayland display"
             echo "  --selection   Capture only the selected area"
             echo "  --window      Capture a single window"
             echo
+            echo "Upload Modes:"
+            echo
+            echo " Use these options when you have an existing image"
+            echo " that you want to upload to Nextcloud."
+            echo
+            echo "  --file FILE   Upload from the local filesystem"
+            echo "  --paste       Upload from the system clipboard"
+            echo
             exit 0
             ;;
         --version)
-            echo "NextShot v0.4.0"
+            echo "NextShot v0.4.1"
             exit 0
             ;;
         *)
@@ -135,17 +147,17 @@ take_screenshot() {
     slop="slop -c 1,0.4,0.7,0.4 -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
-        args="-window root"
+        args=(-window root)
     elif [ "$mode" = "selection" ]; then
-        args="-window root -crop $($slop -f "%g" -t 0)"
+        args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
-        args="-window $($slop -f "%i" -t 999999)"
+        args=(-window "$($slop -f "%i" -t 999999)")
     elif [ "$mode" = "clipboard" ]; then
         from_clipboard > "$_CACHE_DIR/$filename"
     fi
 
     if [ ! "$mode" = "clipboard" ]; then
-        import $args "$_CACHE_DIR/$filename"
+        import "${args[@]}" "$_CACHE_DIR/$filename"
     fi
 
     attempt_rename "$filename"
