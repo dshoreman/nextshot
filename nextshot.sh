@@ -4,6 +4,7 @@ _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
 nextshot() {
+    sanity_check
     parse_opts "$@"
     load_config
     init_cache
@@ -12,6 +13,13 @@ nextshot() {
     url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
 
     echo "$url" | to_clipboard && send_notification
+}
+
+sanity_check() {
+    if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+        echo "Your version of Bash is ${BASH_VERSION} but NextShot requires at least v4."
+        exit 1
+    fi
 }
 
 parse_opts() {
