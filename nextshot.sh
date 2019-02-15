@@ -25,6 +25,8 @@ sanity_check() {
 parse_opts() {
     case "${1:---selection}" in
         --file)
+            local mimetype
+
             if [ -z ${2+x} ]; then
                 echo "--file option requires a filename"
                 exit 1
@@ -35,6 +37,12 @@ parse_opts() {
 
             mode="file"
             file="$2"
+
+            mimetype="$(file --mime-type -b "$file")"
+            if [ ! "${mimetype:0:6}" = "image/" ]; then
+                echo "Failed MIME check: expected image/*, got '$mimetype'."
+                exit 1
+            fi
             ;;
         --fullscreen)
             mode="fullscreen" ;;
