@@ -44,15 +44,17 @@ Don't like UIs? You can skip the first-run config window by manually creating yo
 mkdir -p ~/.config/nextshot && vim ~/.config/nextshot/nextshot.conf
 ```
 
-There are only a few config options, all of which are required:
+Below is a table of available configuration options and what they do.
+Options without a default value are **required**:
 
-| Option     | Description                                                                 |
-| ---------- | --------------------------------------------------------------------------- |
-| `server`   | NextCloud server URL, starting with `https://` and _no trailing /_          |
-| `username` | Your NextCloud username.                                                    |
-| `password` | NextCloud App password created specifically for NextShot.                   |
-| `savedir`  | Name of the folder to save screenshots in, relative to your NextCloud root. |
-| `rename`   | Whether or not to prompt for a filename before upload (`true` or `false`)   |
+| Option     | Default         | Description                                                                 |
+| ---------- | --------------- | --------------------------------------------------------------------------- |
+| `server`   | *n/a*           | NextCloud server URL, starting with `https://` and _no trailing /_          |
+| `username` | *n/a*           | Your NextCloud username.                                                    |
+| `password` | *n/a*           | NextCloud App password created specifically for NextShot.                   |
+| `savedir`  | *n/a*           | Name of the folder to save screenshots in, relative to your NextCloud root. |
+| `rename`   | `FALSE`         | Whether or not to prompt for a filename before upload (`true` or `false`)   |
+| `hlColour` | `1,0.4,0.7,0.4` | Colour to use for selection and window highlight, in RGBA.                  |
 
 ##### Example `nextshot.conf`
 

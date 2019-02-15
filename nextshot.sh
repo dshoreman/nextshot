@@ -70,7 +70,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.4.1"
+            echo "NextShot v0.5.0"
             exit 0
             ;;
         *)
@@ -129,6 +129,7 @@ load_config() {
     # shellcheck disable=SC1090
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
+    rename=${rename:-false}
     rename=${rename,,}
 }
 
@@ -144,7 +145,7 @@ take_screenshot() {
     local args filename slop
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
-    slop="slop -c 1,0.4,0.7,0.4 -lb 3"
+    slop="slop -c ${hlColour:-1,0.4,0.7,0.4} -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
