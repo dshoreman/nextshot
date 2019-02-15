@@ -129,6 +129,7 @@ load_config() {
     # shellcheck disable=SC1090
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
+    rename=${rename:-false}
     rename=${rename,,}
 }
 
