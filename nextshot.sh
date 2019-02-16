@@ -86,7 +86,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.5.0"
+            echo "NextShot v0.6.0"
             exit 0
             ;;
         *)
