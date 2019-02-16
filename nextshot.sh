@@ -226,10 +226,34 @@ send_notification() {
     fi
 }
 
+create_config() {
+    cat << 'EOF' > "$_CONFIG_FILE"
+server=''
+username=''
+password=''
+savedir=''
+rename=false
+EOF
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
     if ! has yad; then
-        echo "Yad is required to display for initial configuration of NextShot."
-        echo "Either install Yad, or configure NextShot manually."
+        echo "Failed to detect Yad, required to display the initial configuration window."
+        echo "If you don't wish to install Yad, NextShot can create a basic config for you."
+        echo
+
+        read -rn1 -p "Create config for manual editing (y/n)? " answer
+
+        if [ "${answer,,}" = "y" ]; then
+            echo
+            echo -n "Creating directory $_CONFIG_DIR... "
+            mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
+
+            echo -n "Creating config template at $_CONFIG_FILE... "
+            create_config && echo "[DONE]" && exit 0
+        fi
+
+        echo "Aborting. Either install Yad, or configure NextShot manually."
         exit 1
     fi
 
