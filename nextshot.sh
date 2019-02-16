@@ -4,6 +4,7 @@ _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
 nextshot() {
+    sanity_check
     parse_opts "$@"
     load_config
     init_cache
@@ -14,9 +15,18 @@ nextshot() {
     echo "$url" | to_clipboard && send_notification
 }
 
+sanity_check() {
+    if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
+        echo "Your version of Bash is ${BASH_VERSION} but NextShot requires at least v4."
+        exit 1
+    fi
+}
+
 parse_opts() {
     case "${1:---selection}" in
         --file)
+            local mimetype
+
             if [ -z ${2+x} ]; then
                 echo "--file option requires a filename"
                 exit 1
@@ -27,6 +37,12 @@ parse_opts() {
 
             mode="file"
             file="$2"
+
+            mimetype="$(file --mime-type -b "$file")"
+            if [ ! "${mimetype:0:6}" = "image/" ]; then
+                echo "Failed MIME check: expected image/*, got '$mimetype'."
+                exit 1
+            fi
             ;;
         --fullscreen)
             mode="fullscreen" ;;
@@ -70,7 +86,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.5.0"
+            echo "NextShot v0.6.0"
             exit 0
             ;;
         *)
@@ -210,10 +226,53 @@ send_notification() {
     fi
 }
 
+create_config() {
+    cat << 'EOF' > "$_CONFIG_FILE"
+# Your Nextcloud domain or base URL, including http[s]:// but no trailing slash
+#  e.g. 'https://nextcloud.example.com' *OR* 'https://example.com/nextcloud'
+server=''
+
+# Your Nextcloud username
+username=''
+
+# Nextcloud App Password created specifically for NextShot (Settings > Personal > Security)
+password=''
+
+# Folder on Nextcloud where screenshots will be uploaded (must already exist)
+savedir=''
+
+# Whether to prompt for a filename before uploading to Nextcloud
+rename=false
+EOF
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
     if ! has yad; then
-        echo "Yad is required to display for initial configuration of NextShot."
-        echo "Either install Yad, or configure NextShot manually."
+        echo "Failed to detect Yad, required to display the initial configuration window."
+        echo "If you don't wish to install Yad, NextShot can create a basic config for you."
+        echo
+
+        read -rn1 -p "Create config for manual editing (y/n)? " answer
+
+        if [ "${answer,,}" = "y" ]; then
+            echo
+            echo -n "Creating nextshot directory... "
+            mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
+
+            echo -n "Creating config template... "
+            create_config && echo "[DONE]"
+
+            echo "Opening config for editing"
+            ${EDITOR:-vi} "$_CONFIG_FILE"
+            echo
+            echo "Config saved! If you wish to make further changes, open $_CONFIG_FILE in your favourite editor."
+            echo
+            echo "You may now run nextshot again to start taking screenshots."
+
+            exit 0
+        fi
+
+        echo "Aborting. Either install Yad, or configure NextShot manually."
         exit 1
     fi
 
