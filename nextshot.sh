@@ -228,10 +228,20 @@ send_notification() {
 
 create_config() {
     cat << 'EOF' > "$_CONFIG_FILE"
+# Your Nextcloud domain or base URL, including http[s]:// but no trailing slash
+#  e.g. 'https://nextcloud.example.com' *OR* 'https://example.com/nextcloud'
 server=''
+
+# Your Nextcloud username
 username=''
+
+# Nextcloud App Password created specifically for NextShot (Settings > Personal > Security)
 password=''
+
+# Folder on Nextcloud where screenshots will be uploaded (must already exist)
 savedir=''
+
+# Whether to prompt for a filename before uploading to Nextcloud
 rename=false
 EOF
 }
