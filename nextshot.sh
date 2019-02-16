@@ -246,11 +246,20 @@ if [ ! -d "$_CONFIG_DIR" ]; then
 
         if [ "${answer,,}" = "y" ]; then
             echo
-            echo -n "Creating directory $_CONFIG_DIR... "
+            echo -n "Creating nextshot directory... "
             mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
 
-            echo -n "Creating config template at $_CONFIG_FILE... "
-            create_config && echo "[DONE]" && exit 0
+            echo -n "Creating config template... "
+            create_config && echo "[DONE]"
+
+            echo "Opening config for editing"
+            ${EDITOR:-vi} "$_CONFIG_FILE"
+            echo
+            echo "Config saved! If you wish to make further changes, open $_CONFIG_FILE in your favourite editor."
+            echo
+            echo "You may now run nextshot again to start taking screenshots."
+
+            exit 0
         fi
 
         echo "Aborting. Either install Yad, or configure NextShot manually."
