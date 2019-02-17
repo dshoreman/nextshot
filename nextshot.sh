@@ -158,37 +158,33 @@ cache_image() {
 }
 
 take_screenshot() {
-    local filename
+    local filename filepath
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    filepath="$_CACHE_DIR/$filename"
 
     if [ "$mode" = "clipboard" ]; then
-        from_clipboard > "$_CACHE_DIR/$filename"
+        from_clipboard > "$filepath"
     elif is_wayland; then
-        shoot_wayland "$filename"
+        shoot_wayland "$filepath"
     else
-        shoot_x "$filename"
+        shoot_x "$filepath"
     fi
 
     attempt_rename "$filename"
 }
 
 shoot_wayland() {
-    local file
-
-    file="$_CACHE_DIR/$1"
-
     if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d)" "$file"
+        grim -g "$(slurp -d)" "$1"
     else
-        grim "$file"
+        grim "$1"
     fi
 }
 
 shoot_x() {
-    local args file slop
+    local args slop
 
-    file="$_CACHE_DIR/$1"
     slop="slop -c ${hlColour:-1,0.4,0.7,0.4} -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
@@ -199,7 +195,7 @@ shoot_x() {
         args=(-window "$($slop -f "%i" -t 999999)")
     fi
 
-    import "${args[@]}" "$file"
+    import "${args[@]}" "$1"
 }
 
 attempt_rename() {
