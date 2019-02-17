@@ -300,7 +300,7 @@ if [ ! -d "$_CONFIG_DIR" ]; then
         exit 1
     fi
 
-    response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot</b>\!
+    response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot\!</b>
 
 Seems this is your first time running this thing.
 Fill out the options below and you'll be taking screenshots in no time:\n" \
