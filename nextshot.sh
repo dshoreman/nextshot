@@ -57,7 +57,13 @@ parse_opts() {
         --selection)
             mode="selection" ;;
         --window)
-            mode="window" ;;
+            if is_wayland; then
+                echo "Window mode is currently not supported in Wayland, --selection implied."
+                mode="selection"
+            else
+                mode="window"
+            fi
+            ;;
         --help)
             echo "Usage:"
             echo "  nextshot [OPTION]"
