@@ -162,7 +162,9 @@ take_screenshot() {
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
 
-    if is_wayland; then
+    if [ "$mode" = "clipboard" ]; then
+        from_clipboard > "$_CACHE_DIR/$filename"
+    elif is_wayland; then
         shoot_wayland "$filename"
     else
         shoot_x "$filename"
@@ -195,13 +197,9 @@ shoot_x() {
         args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
         args=(-window "$($slop -f "%i" -t 999999)")
-    elif [ "$mode" = "clipboard" ]; then
-        from_clipboard > "$file"
     fi
 
-    if [ ! "$mode" = "clipboard" ]; then
-        import "${args[@]}" "$file"
-    fi
+    import "${args[@]}" "$file"
 }
 
 attempt_rename() {
