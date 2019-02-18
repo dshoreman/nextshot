@@ -153,6 +153,28 @@ load_config() {
 
     rename=${rename:-false}
     rename=${rename,,}
+
+    parse_colour
+}
+
+parse_colour() {
+    local red green blue parts
+
+    hlColour="${hlColour:-1,0.4,0.7,0.4}"
+
+    if is_wayland; then
+        IFS="," read -ra parts <<< "$hlColour"
+
+        red="${parts[0]}"
+        green="${parts[1]}"
+        blue="${parts[2]}"
+
+        hlColour="#$(dec2hex "$red")$(dec2hex "$green")$(dec2hex "$blue")"
+    fi
+}
+
+dec2hex() {
+    printf '%x\n' $(echo "$1 * 255 / 1" | bc)
 }
 
 cache_image() {
@@ -181,12 +203,8 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    local colour
-
-    colour="#ff66b2"
-
     if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d -c ${colour}ee -s ${colour}66)" "$1"
+        grim -g "$(slurp -d -c ${hlColour}ee -s ${hlColour}66)" "$1"
     else
         grim "$1"
     fi
@@ -195,7 +213,7 @@ shoot_wayland() {
 shoot_x() {
     local args slop
 
-    slop="slop -c ${hlColour:-1,0.4,0.7,0.4} -lb 3"
+    slop="slop -c $hlColour -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
