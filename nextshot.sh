@@ -181,8 +181,12 @@ take_screenshot() {
 }
 
 shoot_wayland() {
+    local colour
+
+    colour="#ff66b2"
+
     if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d)" "$1"
+        grim -g "$(slurp -d -c ${colour}ee -s ${colour}66)" "$1"
     else
         grim "$1"
     fi
