@@ -54,7 +54,7 @@ Options without a default value are **required**:
 | `password` | *n/a*           | NextCloud App password created specifically for NextShot.                   |
 | `savedir`  | *n/a*           | Name of the folder to save screenshots in, relative to your NextCloud root. |
 | `rename`   | `FALSE`         | Whether or not to prompt for a filename before upload (`true` or `false`)   |
-| `hlColour` | `1,0.4,0.7,0.4` | Colour to use for selection and window highlight, in RGBA.                  |
+| `hlColour` | `1,0.4,0.7`     | Colour to use for selection and window highlight, in RGB.                   |
 
 ##### Example `nextshot.conf`
 

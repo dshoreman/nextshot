@@ -160,7 +160,7 @@ load_config() {
 parse_colour() {
     local red green blue parts
 
-    hlColour="${hlColour:-1,0.4,0.7,0.4}"
+    hlColour="${hlColour:-1,0.4,0.7}"
 
     if is_wayland; then
         IFS="," read -ra parts <<< "$hlColour"
@@ -213,7 +213,7 @@ shoot_wayland() {
 shoot_x() {
     local args slop
 
-    slop="slop -c $hlColour -lb 3"
+    slop="slop -c $hlColour,0.4 -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
