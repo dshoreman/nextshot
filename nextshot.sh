@@ -210,6 +210,19 @@ take_screenshot() {
 shoot_wayland() {
     if [ "$mode" = "selection" ]; then
         grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
+    elif [ "$mode" = "window" ]; then
+        local windows window num size dimensions title
+
+        windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
+
+        echo "Found the following visible windows:"
+        num=0
+        while read -r window; do
+            read -r offset size title <<< "$window"
+
+            echo "[$num] $title"
+            ((num+=1))
+        done <<< "$windows"
     else
         grim "$1"
     fi
