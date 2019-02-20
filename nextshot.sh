@@ -179,7 +179,7 @@ int2dec() {
 }
 
 int2hex() {
-    printf '%x\n' "$1"
+    printf '%02x\n' "$1"
 }
 
 cache_image() {
