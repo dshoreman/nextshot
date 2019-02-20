@@ -160,21 +160,26 @@ load_config() {
 parse_colour() {
     local red green blue parts
 
-    hlColour="${hlColour:-1,0.4,0.7}"
+    hlColour="${hlColour:-255,100,180}"
+    IFS="," read -ra parts <<< "$hlColour"
+
+    red="${parts[0]}"
+    green="${parts[1]}"
+    blue="${parts[2]}"
 
     if is_wayland; then
-        IFS="," read -ra parts <<< "$hlColour"
-
-        red="${parts[0]}"
-        green="${parts[1]}"
-        blue="${parts[2]}"
-
-        hlColour="#$(dec2hex "$red")$(dec2hex "$green")$(dec2hex "$blue")"
+        hlColour="#$(int2hex "$red")$(int2hex "$green")$(int2hex "$blue")"
+    else
+        hlColour="$(int2dec "$red"),$(int2dec "$green"),$(int2dec "$blue")"
     fi
 }
 
-dec2hex() {
-    printf '%x\n' $(echo "$1 * 255 / 1" | bc)
+int2dec() {
+    printf '%.2f' "$(echo "$1 / 255" | bc -l)"
+}
+
+int2hex() {
+    printf '%x\n' "$1"
 }
 
 cache_image() {
