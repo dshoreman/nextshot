@@ -229,7 +229,11 @@ shoot_wayland() {
         done <<< "$windows"
 
         ((max="$num-1"))
-        read -r -p "Which window to capture [0-$max]? " choice
+        choice=-1
+
+        while [ $choice -lt 0 ] || [ $choice -gt $max ]; do
+            read -r -p "Which window to capture [0-$max]? " choice
+        done
 
         echo "Selected window $choice: ${titles[$choice]}"
     else
