@@ -209,7 +209,7 @@ take_screenshot() {
 
 shoot_wayland() {
     if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d -c ${hlColour}ee -s ${hlColour}66)" "$1"
+        grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
     else
         grim "$1"
     fi
