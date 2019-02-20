@@ -23,11 +23,17 @@ sudo chmod +x /usr/local/bin/nextshot
 NextShot makes use of some third party tools to provide its functionality.
 To use it, you'll need the following:
 
-* `curl` for uploading and sharing screenshots via the NextCloud API
-* `imagemagick` for taking the screenshots
-* `slop` for selecting an area on the screen
-* `xclip` **or** `wl-clipboard` for copying the share link to clipboard
-* `yad` for the config form and filename dialogs (**optional**)
+* **On X11**
+  * `imagemagick` for taking the screenshots
+  * `slop` for selecting windows or an area on the screen
+  * `xclip` for copying the share link to clipboard
+* **On Wayland**
+  * `grim` for taking the screenshots
+  * `slurp` for selecting an area on the screen
+  * `wl-clipboard` for copying the share link to clipboard
+* **Everywhere**
+  * `curl` for uploading and sharing screenshots via the NextCloud API
+  * `yad` for the config form and filename dialogs (**optional**)
 
 ### Configuration
 
@@ -54,7 +60,7 @@ Options without a default value are **required**:
 | `password` | *n/a*           | NextCloud App password created specifically for NextShot.                   |
 | `savedir`  | *n/a*           | Name of the folder to save screenshots in, relative to your NextCloud root. |
 | `rename`   | `FALSE`         | Whether or not to prompt for a filename before upload (`true` or `false`)   |
-| `hlColour` | `1,0.4,0.7,0.4` | Colour to use for selection and window highlight, in RGBA.                  |
+| `hlColour` | `255,100,180`   | Colour to use for selection and window highlight, in RGB.                   |
 
 ##### Example `nextshot.conf`
 
@@ -94,7 +100,7 @@ nextshot --file fluffy-kittens.jpg
 
 Note that this bypasses the rename prompt and may overwrite existing files.
 
-### Usage via Keybind (i3-wm)
+### Usage via Keybind (i3 or Sway)
 
 Add the following to your i3 config to have NextShot's different
 modes bound to the Print Screen key:

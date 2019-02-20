@@ -57,7 +57,13 @@ parse_opts() {
         --selection)
             mode="selection" ;;
         --window)
-            mode="window" ;;
+            if is_wayland; then
+                echo "Window mode is currently not supported in Wayland, --selection implied."
+                mode="selection"
+            else
+                mode="window"
+            fi
+            ;;
         --help)
             echo "Usage:"
             echo "  nextshot [OPTION]"
@@ -86,7 +92,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.6.0"
+            echo "NextShot v0.7.0"
             exit 0
             ;;
         *)
@@ -128,7 +134,7 @@ from_clipboard() {
 }
 
 is_wayland() {
-    [ -z ${WAYLAND_DISPLAY+x} ] && return 1
+    [ -n "${WAYLAND_DISPLAY+x}" ]
 }
 
 filter_key() {
@@ -147,6 +153,33 @@ load_config() {
 
     rename=${rename:-false}
     rename=${rename,,}
+
+    parse_colour
+}
+
+parse_colour() {
+    local red green blue parts
+
+    hlColour="${hlColour:-255,100,180}"
+    IFS="," read -ra parts <<< "$hlColour"
+
+    red="${parts[0]}"
+    green="${parts[1]}"
+    blue="${parts[2]}"
+
+    if is_wayland; then
+        hlColour="#$(int2hex "$red")$(int2hex "$green")$(int2hex "$blue")"
+    else
+        hlColour="$(int2dec "$red"),$(int2dec "$green"),$(int2dec "$blue")"
+    fi
+}
+
+int2dec() {
+    printf '%.2f' "$(echo "$1 / 255" | bc -l)"
+}
+
+int2hex() {
+    printf '%02x\n' "$1"
 }
 
 cache_image() {
@@ -158,10 +191,34 @@ cache_image() {
 }
 
 take_screenshot() {
-    local args filename slop
+    local filename filepath
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
-    slop="slop -c ${hlColour:-1,0.4,0.7,0.4} -lb 3"
+    filepath="$_CACHE_DIR/$filename"
+
+    if [ "$mode" = "clipboard" ]; then
+        from_clipboard > "$filepath"
+    elif is_wayland; then
+        shoot_wayland "$filepath"
+    else
+        shoot_x "$filepath"
+    fi
+
+    attempt_rename "$filename"
+}
+
+shoot_wayland() {
+    if [ "$mode" = "selection" ]; then
+        grim -g "$(slurp -d -c ${hlColour}ee -s ${hlColour}66)" "$1"
+    else
+        grim "$1"
+    fi
+}
+
+shoot_x() {
+    local args slop
+
+    slop="slop -c $hlColour,0.4 -lb 3"
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
@@ -169,15 +226,9 @@ take_screenshot() {
         args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
         args=(-window "$($slop -f "%i" -t 999999)")
-    elif [ "$mode" = "clipboard" ]; then
-        from_clipboard > "$_CACHE_DIR/$filename"
     fi
 
-    if [ ! "$mode" = "clipboard" ]; then
-        import "${args[@]}" "$_CACHE_DIR/$filename"
-    fi
-
-    attempt_rename "$filename"
+    import "${args[@]}" "$1"
 }
 
 attempt_rename() {
@@ -276,7 +327,7 @@ if [ ! -d "$_CONFIG_DIR" ]; then
         exit 1
     fi
 
-    response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot</b>\!
+    response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot\!</b>
 
 Seems this is your first time running this thing.
 Fill out the options below and you'll be taking screenshots in no time:\n" \
