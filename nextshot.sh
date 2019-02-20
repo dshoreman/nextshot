@@ -211,7 +211,7 @@ shoot_wayland() {
     if [ "$mode" = "selection" ]; then
         grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
     elif [ "$mode" = "window" ]; then
-        local windows window num size offset geometries title titles
+        local windows window choice num max size offset geometries title titles
 
         windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
         geometries=()
@@ -227,6 +227,11 @@ shoot_wayland() {
             echo "[$num] $title"
             ((num+=1))
         done <<< "$windows"
+
+        ((max="$num-1"))
+        read -r -p "Which window to capture [0-$max]? " choice
+
+        echo "Selected window $choice: ${titles[$choice]}"
     else
         grim "$1"
     fi
