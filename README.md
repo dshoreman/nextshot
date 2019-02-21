@@ -29,6 +29,7 @@ To use it, you'll need the following:
   * `xclip` for copying the share link to clipboard
 * **On Wayland**
   * `grim` for taking the screenshots
+  * `jq` in `--window` mode to parse visible windows from `swaymsg`
   * `slurp` for selecting an area on the screen
   * `wl-clipboard` for copying the share link to clipboard
 * **Everywhere**
