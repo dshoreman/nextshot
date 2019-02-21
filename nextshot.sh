@@ -57,12 +57,7 @@ parse_opts() {
         --selection)
             mode="selection" ;;
         --window)
-            if is_wayland; then
-                echo "Window mode is currently not supported in Wayland, --selection implied."
-                mode="selection"
-            else
-                mode="window"
-            fi
+            mode="window"
             ;;
         --help)
             echo "Usage:"
@@ -236,6 +231,8 @@ shoot_wayland() {
         done
 
         echo "Selected window $choice: ${titles[$choice]}"
+
+        grim -g "${geometries[$choice]}" "$1"
     else
         grim "$1"
     fi
