@@ -87,7 +87,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.8.1"
+            echo "NextShot v0.8.2"
             exit 0
             ;;
         *)
@@ -226,8 +226,13 @@ shoot_wayland() {
         ((max="$num-1"))
         choice=-1
 
-        while [ "$choice" -lt 0 ] || [ "$choice" -gt $max ]; do
+        while [ $choice -lt 0 ] || [ $choice -gt $max ]; do
             read -r -p "Which window to capture [0-$max]? " choice
+
+            if [ -z "$choice" ] || ! [[ "$choice" =~ ^[0-9]+$ ]]; then
+                echo "Invalid selection. Enter a number between 0 and $max" >&2
+                choice=-1
+            fi
         done
 
         echo "Selected window $choice: ${titles[$choice]}" >&2
