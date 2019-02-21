@@ -212,14 +212,14 @@ shoot_wayland() {
         geometries=()
         titles=()
 
-        echo "Found the following visible windows:"
+        echo "Found the following visible windows:" >&2
         num=0
         while read -r window; do
             read -r offset size title <<< "$window"
             geometries+=("$offset $size")
             titles+=("$title")
 
-            echo "[$num] $title"
+            echo "[$num] $title" >&2
             ((num+=1))
         done <<< "$windows"
 
@@ -230,7 +230,7 @@ shoot_wayland() {
             read -r -p "Which window to capture [0-$max]? " choice
         done
 
-        echo "Selected window $choice: ${titles[$choice]}"
+        echo "Selected window $choice: ${titles[$choice]}" >&2
 
         grim -g "${geometries[$choice]}" "$1"
     else
