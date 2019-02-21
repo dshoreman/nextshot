@@ -57,12 +57,7 @@ parse_opts() {
         --selection)
             mode="selection" ;;
         --window)
-            if is_wayland; then
-                echo "Window mode is currently not supported in Wayland, --selection implied."
-                mode="selection"
-            else
-                mode="window"
-            fi
+            mode="window"
             ;;
         --help)
             echo "Usage:"
@@ -210,6 +205,34 @@ take_screenshot() {
 shoot_wayland() {
     if [ "$mode" = "selection" ]; then
         grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
+    elif [ "$mode" = "window" ]; then
+        local windows window choice num max size offset geometries title titles
+
+        windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
+        geometries=()
+        titles=()
+
+        echo "Found the following visible windows:" >&2
+        num=0
+        while read -r window; do
+            read -r offset size title <<< "$window"
+            geometries+=("$offset $size")
+            titles+=("$title")
+
+            echo "[$num] $title" >&2
+            ((num+=1))
+        done <<< "$windows"
+
+        ((max="$num-1"))
+        choice=-1
+
+        while [ $choice -lt 0 ] || [ $choice -gt $max ]; do
+            read -r -p "Which window to capture [0-$max]? " choice
+        done
+
+        echo "Selected window $choice: ${titles[$choice]}" >&2
+
+        grim -g "${geometries[$choice]}" "$1"
     else
         grim "$1"
     fi
