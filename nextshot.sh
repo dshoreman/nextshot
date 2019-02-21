@@ -229,7 +229,10 @@ shoot_wayland() {
         while [ $choice -lt 0 ] || [ $choice -gt $max ]; do
             read -r -p "Which window to capture [0-$max]? " choice
 
-            [ -z "$choice" ] && choice=-1
+            if [ -z "$choice" ] || ! [[ "$choice" =~ ^[0-9]+$ ]]; then
+                echo "Invalid selection. Enter a number between 0 and $max" >&2
+                choice=-1
+            fi
         done
 
         echo "Selected window $choice: ${titles[$choice]}" >&2
