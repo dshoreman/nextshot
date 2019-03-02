@@ -3,14 +3,19 @@
 _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
+set -Eeo pipefail
+
 nextshot() {
+    local filename url
+
     sanity_check
     parse_opts "$@"
     load_config
     init_cache
-    local url
 
-    url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
+    filename=$(cache_image | nc_upload)
+
+    url="$(nc_share "$filename" | make_url)"
 
     echo "$url" | to_clipboard && send_notification
 }
@@ -20,6 +25,12 @@ aborted() {
     exit 1
 }
 trap aborted SIGINT
+
+errorred() {
+    echo -e "\nAborted due to script error"
+    exit 1
+}
+trap errorred ERR
 
 sanity_check() {
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
