@@ -15,6 +15,12 @@ nextshot() {
     echo "$url" | to_clipboard && send_notification
 }
 
+aborted() {
+    echo -e "\nAborted by user"
+    exit 1
+}
+trap aborted SIGINT
+
 sanity_check() {
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
         echo "Your version of Bash is ${BASH_VERSION} but NextShot requires at least v4."
