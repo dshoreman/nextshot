@@ -295,8 +295,10 @@ attempt_rename() {
 nc_upload() {
     local filename; read -r filename
 
+    echo "Uploading screenshot..." >&2
+
     respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename" -o /dev/null -w "%{http_code}")
+        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o /dev/null -w "%{http_code}")
 
     if [ "$respCode" -ne 201 ]; then
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
@@ -306,7 +308,7 @@ nc_upload() {
 }
 
 nc_share() {
-    curl -u "$username":"$password" -X POST --post301 -LH "OCS-APIRequest: true" \
+    curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
         -F "path=/$savedir/$1" -F "shareType=3"
 }
