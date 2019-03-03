@@ -3,17 +3,34 @@
 _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
+set -Eeo pipefail
+
 nextshot() {
+    local filename json url
+
     sanity_check
     parse_opts "$@"
     load_config
     init_cache
-    local url
 
-    url="$(nc_share "$(cache_image | nc_upload)" | make_url)"
+    filename=$(cache_image | nc_upload)
+    json=$(nc_share "$filename")
+    url="$(echo "$json" | make_url)"
 
     echo "$url" | to_clipboard && send_notification
 }
+
+aborted() {
+    echo -e "\nAborted by user"
+    exit 1
+}
+trap aborted SIGINT
+
+errorred() {
+    echo -e "\nAborted due to script error"
+    exit 1
+}
+trap errorred ERR
 
 sanity_check() {
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
@@ -278,14 +295,20 @@ attempt_rename() {
 nc_upload() {
     local filename; read -r filename
 
-    curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename"
+    echo "Uploading screenshot..." >&2
+
+    respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
+        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o /dev/null -w "%{http_code}")
+
+    if [ "$respCode" -ne 201 ]; then
+        echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
+    fi
 
     echo "$filename"
 }
 
 nc_share() {
-    curl -u "$username":"$password" -X POST --post301 -LH "OCS-APIRequest: true" \
+    curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
         -F "path=/$savedir/$1" -F "shareType=3"
 }
