@@ -295,8 +295,12 @@ attempt_rename() {
 nc_upload() {
     local filename; read -r filename
 
-    curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename"
+    respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
+        -L --post301 --upload-file "$_CACHE_DIR/$filename" -o /dev/null -w "%{http_code}")
+
+    if [ "$respCode" -ne 201 ]; then
+        echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
+    fi
 
     echo "$filename"
 }
