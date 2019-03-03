@@ -6,7 +6,7 @@ _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 set -Eeo pipefail
 
 nextshot() {
-    local filename url
+    local filename json url
 
     sanity_check
     parse_opts "$@"
@@ -14,8 +14,8 @@ nextshot() {
     init_cache
 
     filename=$(cache_image | nc_upload)
-
-    url="$(nc_share "$filename" | make_url)"
+    json=$(nc_share "$filename")
+    url="$(echo "$json" | make_url)"
 
     echo "$url" | to_clipboard && send_notification
 }
