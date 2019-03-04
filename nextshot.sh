@@ -359,6 +359,16 @@ rename=false
 EOF
 }
 
+config_complete() {
+    echo
+    echo "Config saved! It can be found in $_CONFIG_FILE"
+    echo "If you wish to make further changes, open it in your favourite text editor."
+    echo
+    echo "You may now run nextshot again to start taking screenshots."
+
+    exit 0
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
     if ! has yad; then
         echo "Failed to detect Yad, required to display the initial configuration window."
@@ -378,12 +388,8 @@ if [ ! -d "$_CONFIG_DIR" ]; then
 
         echo "Opening config for editing"
         ${EDITOR:-vi} "$_CONFIG_FILE"
-        echo
-        echo "Config saved! If you wish to make further changes, open $_CONFIG_FILE in your favourite editor."
-        echo
-        echo "You may now run nextshot again to start taking screenshots."
 
-        exit 0
+        config_complete
     fi
 
     response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot\!</b>
@@ -414,8 +420,7 @@ and click <b>Create new app password</b>.\n:LBL" \
 
     mkdir -p "$_CONFIG_DIR" && sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
 
-    echo "Config saved to $_CONFIG_FILE"
-    exit 0
+    config_complete
 fi
 
 nextshot "$@"
