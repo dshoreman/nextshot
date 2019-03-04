@@ -23,6 +23,10 @@ nextshot() {
 }
 
 abort_config() {
+    if ! has yad; then
+        echo "Either install Yad, or configure NextShot manually."
+    fi
+
     echo "Configuration aborted by user, exiting." >&2
     exit 1
 }
@@ -362,27 +366,24 @@ if [ ! -d "$_CONFIG_DIR" ]; then
         echo
 
         read -rn1 -p "Create config for manual editing (y/n)? " answer
+        echo
 
-        if [ "${answer,,}" = "y" ]; then
-            echo
-            echo -n "Creating nextshot directory... "
-            mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
+        [ "${answer,,}" = "y" ] || abort_config
 
-            echo -n "Creating config template... "
-            create_config && echo "[DONE]"
+        echo -n "Creating nextshot directory... "
+        mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
 
-            echo "Opening config for editing"
-            ${EDITOR:-vi} "$_CONFIG_FILE"
-            echo
-            echo "Config saved! If you wish to make further changes, open $_CONFIG_FILE in your favourite editor."
-            echo
-            echo "You may now run nextshot again to start taking screenshots."
+        echo -n "Creating config template... "
+        create_config && echo "[DONE]"
 
-            exit 0
-        fi
+        echo "Opening config for editing"
+        ${EDITOR:-vi} "$_CONFIG_FILE"
+        echo
+        echo "Config saved! If you wish to make further changes, open $_CONFIG_FILE in your favourite editor."
+        echo
+        echo "You may now run nextshot again to start taking screenshots."
 
-        echo "Aborting. Either install Yad, or configure NextShot manually."
-        exit 1
+        exit 0
     fi
 
     response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot\!</b>
