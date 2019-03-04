@@ -118,15 +118,30 @@ parse_opts() {
     echo "Screenshot mode set to $mode"
 }
 
+filter_key() {
+    grep -Po "\"$1\": *\"\K[^\"]*"
+}
+
 has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
-to_clipboard() {
-    if is_wayland; then wl-copy
-    else
-        xclip -selection clipboard
-    fi
+is_wayland() {
+    [ -n "${WAYLAND_DISPLAY+x}" ]
+}
+
+int2dec() {
+    printf '%.2f' "$(echo "$1 / 255" | bc -l)"
+}
+
+int2hex() {
+    printf '%02x\n' "$1"
+}
+
+make_url() {
+    local json; read -r json
+
+    echo "$server/s/$(echo "$json" | filter_key "token")"
 }
 
 check_clipboard() {
@@ -147,12 +162,11 @@ from_clipboard() {
     fi
 }
 
-is_wayland() {
-    [ -n "${WAYLAND_DISPLAY+x}" ]
-}
-
-filter_key() {
-    grep -Po "\"$1\": *\"\K[^\"]*"
+to_clipboard() {
+    if is_wayland; then wl-copy
+    else
+        xclip -selection clipboard
+    fi
 }
 
 init_cache() {
@@ -186,14 +200,6 @@ parse_colour() {
     else
         hlColour="$(int2dec "$red"),$(int2dec "$green"),$(int2dec "$blue")"
     fi
-}
-
-int2dec() {
-    printf '%.2f' "$(echo "$1 / 255" | bc -l)"
-}
-
-int2hex() {
-    printf '%02x\n' "$1"
 }
 
 cache_image() {
@@ -313,12 +319,6 @@ nc_share() {
     curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
         -F "path=/$savedir/$1" -F "shareType=3"
-}
-
-make_url() {
-    local json; read -r json
-
-    echo "$server/s/$(echo "$json" | filter_key "token")"
 }
 
 send_notification() {
