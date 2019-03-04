@@ -22,6 +22,11 @@ nextshot() {
     echo "$url" | to_clipboard && send_notification
 }
 
+abort_config() {
+    echo "Configuration aborted by user, exiting." >&2
+    exit 1
+}
+
 aborted() {
     echo -e "\nAborted by user"
     exit 1
@@ -396,12 +401,7 @@ and click <b>Create new app password</b>.\n:LBL" \
         --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" true "Screenshots")
-
-    if $response; then
-        echo "Configuration aborted by user, exiting."
-        exit
-    fi
+        "https://" "" "" "" "" true "Screenshots") || abort_config
 
     IFS='|' read -r server _ username password _ rename savedir _ <<< "$response"
     rename=${rename//\'/}
