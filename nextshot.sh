@@ -22,6 +22,15 @@ nextshot() {
     echo "$url" | to_clipboard && send_notification
 }
 
+abort_config() {
+    if ! has yad; then
+        echo "Either install Yad, or configure NextShot manually."
+    fi
+
+    echo "Configuration aborted by user, exiting." >&2
+    exit 1
+}
+
 aborted() {
     echo -e "\nAborted by user"
     exit 1
@@ -350,6 +359,16 @@ rename=false
 EOF
 }
 
+config_complete() {
+    echo
+    echo "Config saved! It can be found in $_CONFIG_FILE"
+    echo "If you wish to make further changes, open it in your favourite text editor."
+    echo
+    echo "You may now run nextshot again to start taking screenshots."
+
+    exit 0
+}
+
 if [ ! -d "$_CONFIG_DIR" ]; then
     if ! has yad; then
         echo "Failed to detect Yad, required to display the initial configuration window."
@@ -357,27 +376,20 @@ if [ ! -d "$_CONFIG_DIR" ]; then
         echo
 
         read -rn1 -p "Create config for manual editing (y/n)? " answer
+        echo
 
-        if [ "${answer,,}" = "y" ]; then
-            echo
-            echo -n "Creating nextshot directory... "
-            mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
+        [ "${answer,,}" = "y" ] || abort_config
 
-            echo -n "Creating config template... "
-            create_config && echo "[DONE]"
+        echo -n "Creating nextshot directory... "
+        mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
 
-            echo "Opening config for editing"
-            ${EDITOR:-vi} "$_CONFIG_FILE"
-            echo
-            echo "Config saved! If you wish to make further changes, open $_CONFIG_FILE in your favourite editor."
-            echo
-            echo "You may now run nextshot again to start taking screenshots."
+        echo -n "Creating config template... "
+        create_config && echo "[DONE]"
 
-            exit 0
-        fi
+        echo "Opening config for editing"
+        ${EDITOR:-vi} "$_CONFIG_FILE"
 
-        echo "Aborting. Either install Yad, or configure NextShot manually."
-        exit 1
+        config_complete
     fi
 
     response=$(yad --title "NextShot Configuration" --text="<b>Welcome to NextShot\!</b>
@@ -396,26 +408,19 @@ and click <b>Create new app password</b>.\n:LBL" \
         --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" true "Screenshots")
-
-    if $response; then
-        echo "Configuration aborted by user, exiting."
-        exit
-    fi
+        "https://" "" "" "" "" true "Screenshots") || abort_config
 
     IFS='|' read -r server _ username password _ rename savedir _ <<< "$response"
     rename=${rename//\'/}
 
-    mkdir -p "$_CONFIG_DIR"
-
-    tmpConfig="server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename"
-
-    yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
+    config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --width=400 --height=175 --form --field=":TXT" "$tmpConfig" | sed 's/\\n/\n/g' > "$_CONFIG_FILE"
+        --button="gtk-cancel:1" --button="gtk-save:0" --width=400 --height=175 --form --field=":TXT" \
+        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename") || abort_config
 
-    echo "Config saved to $_CONFIG_FILE"
-    exit 0
+    mkdir -p "$_CONFIG_DIR" && sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
+
+    config_complete
 fi
 
 nextshot "$@"
