@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
+set -Eeo pipefail
+
+trap 'echo -e "\nAborted due to error" && exit 1' ERR
+trap 'echo -e "\nAborted by user" && exit 1' SIGINT
+
 _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
-
-set -Eeo pipefail
 
 nextshot() {
     local image filename json url
@@ -30,18 +33,6 @@ abort_config() {
     echo "Configuration aborted by user, exiting." >&2
     exit 1
 }
-
-aborted() {
-    echo -e "\nAborted by user"
-    exit 1
-}
-trap aborted SIGINT
-
-errorred() {
-    echo -e "\nAborted due to script error"
-    exit 1
-}
-trap errorred ERR
 
 sanity_check() {
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
