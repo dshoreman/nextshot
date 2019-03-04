@@ -407,13 +407,12 @@ and click <b>Create new app password</b>.\n:LBL" \
     IFS='|' read -r server _ username password _ rename savedir _ <<< "$response"
     rename=${rename//\'/}
 
-    mkdir -p "$_CONFIG_DIR"
-
-    tmpConfig="server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename"
-
-    yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
+    config=$(yad --title="NextShot Configuration" --borders=10 --button="gtk-save" --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --width=400 --height=175 --form --field=":TXT" "$tmpConfig" | sed 's/\\n/\n/g' > "$_CONFIG_FILE"
+        --width=400 --height=175 --form --field=":TXT" \
+        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename") || abort_config
+
+    mkdir -p "$_CONFIG_DIR" && sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
 
     echo "Config saved to $_CONFIG_FILE"
     exit 0
