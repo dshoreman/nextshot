@@ -8,10 +8,10 @@ exec 3<> $PIPE
 yad --notification --listen <&3 &
 
 echo "menu:\
-Capture area        |\
-Capture window      |\
-Capture full screen |\
-Quit" >&3
+Capture area        !nextshot --selection   |\
+Capture window      !nextshot --window      |\
+Capture full screen !nextshot --fullscreen  ||\
+Quit Nextshot       !quit" >&3
 
 echo "icon:camera-photo-symbolic" >&3
 echo "tooltip:Nextshot" >&3
