@@ -187,26 +187,25 @@ load_config() {
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
 
+    hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     rename=${rename:-false}
     rename=${rename,,}
 
-    parse_colour && echo "Config loaded!"
+    echo "Config loaded!"
 }
 
 parse_colour() {
     local red green blue parts
-
-    hlColour="${hlColour:-255,100,180}"
-    IFS="," read -ra parts <<< "$hlColour"
+    IFS="," read -ra parts <<< "$1"
 
     red="${parts[0]}"
     green="${parts[1]}"
     blue="${parts[2]}"
 
     if is_wayland; then
-        hlColour="#$(int2hex "$red")$(int2hex "$green")$(int2hex "$blue")"
+        echo "#$(int2hex "$red")$(int2hex "$green")$(int2hex "$blue")"
     else
-        hlColour="$(int2dec "$red"),$(int2dec "$green"),$(int2dec "$blue")"
+        echo "$(int2dec "$red"),$(int2dec "$green"),$(int2dec "$blue")"
     fi
 }
 
