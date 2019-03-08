@@ -180,7 +180,7 @@ load_config() {
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
-    : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}"
+    : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
 
     rename=${rename:-false}
     rename=${rename,,}
