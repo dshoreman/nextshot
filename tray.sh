@@ -5,9 +5,15 @@ rm -f $PIPE
 mkfifo $PIPE
 exec 3<> $PIPE
 
+# shellcheck disable=SC1090
+source "$HOME/.config/nextshot/nextshot.conf"
+# shellcheck disable=SC2154
+files_url="$server/apps/files/?dir=/$savedir"
+
 yad --notification --listen --no-middle <&3 &
 
 echo "menu:\
+Open Nextcloud      ! xdg-open $files_url    ||\
 Capture area        ! nextshot --selection   |\
 Capture window      ! nextshot --window      |\
 Capture full screen ! nextshot --fullscreen  ||\
