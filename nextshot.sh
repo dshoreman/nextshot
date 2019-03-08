@@ -177,7 +177,7 @@ init_cache() {
 
 load_config() {
     # shellcheck disable=SC1090
-    echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
+    echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}"
@@ -185,7 +185,7 @@ load_config() {
     rename=${rename:-false}
     rename=${rename,,}
 
-    parse_colour
+    parse_colour && echo "Config loaded!"
 }
 
 parse_colour() {
