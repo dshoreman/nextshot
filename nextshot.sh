@@ -5,8 +5,9 @@ set -Eeo pipefail
 trap 'echo -e "\nAborted due to error" && exit 1' ERR
 trap 'echo -e "\nAborted by user" && exit 1' SIGINT
 
-_CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
-_CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
+readonly _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
+readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
+readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 
 nextshot() {
     local image filename json url
@@ -14,7 +15,6 @@ nextshot() {
     sanity_check && setup
     parse_opts "$@"
     load_config
-    init_cache
 
     image=$(cache_image)
     filename="$(echo "$image" | nc_upload)"
@@ -42,6 +42,8 @@ setup() {
 
         config_complete
     fi
+
+    [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
 }
 
 parse_opts() {
@@ -170,12 +172,6 @@ to_clipboard() {
     else
         xclip -selection clipboard
     fi
-}
-
-init_cache() {
-    _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
-
-    [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
 }
 
 load_config() {
