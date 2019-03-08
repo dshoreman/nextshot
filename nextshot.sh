@@ -10,6 +10,33 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _VERSION="0.8.2"
 
+usage() {
+    echo "Usage:"
+    echo "  nextshot [OPTION]"
+    echo
+    echo "General Options:"
+    echo "  --help        Display this help and exit"
+    echo "  --version     Output version information and exit"
+    echo
+    echo "Screenshot Modes:"
+    echo
+    echo " Use these options to take a new screenshot and have"
+    echo " NextShot automatically upload it to Nextcloud."
+    echo
+    echo "  --fullscreen  Capture the entire X/Wayland display"
+    echo "  --selection   Capture only the selected area"
+    echo "  --window      Capture a single window"
+    echo
+    echo "Upload Modes:"
+    echo
+    echo " Use these options when you have an existing image"
+    echo " that you want to upload to Nextcloud."
+    echo
+    echo "  --file FILE   Upload from the local filesystem"
+    echo "  --paste       Upload from the system clipboard"
+    echo
+}
+
 nextshot() {
     local image filename json url
 
@@ -86,30 +113,7 @@ parse_opts() {
             mode="window"
             ;;
         --help)
-            echo "Usage:"
-            echo "  nextshot [OPTION]"
-            echo
-            echo "General Options:"
-            echo "  --help        Display this help and exit"
-            echo "  --version     Output version information and exit"
-            echo
-            echo "Screenshot Modes:"
-            echo
-            echo " Use these options to take a new screenshot and have"
-            echo " NextShot automatically upload it to Nextcloud."
-            echo
-            echo "  --fullscreen  Capture the entire X/Wayland display"
-            echo "  --selection   Capture only the selected area"
-            echo "  --window      Capture a single window"
-            echo
-            echo "Upload Modes:"
-            echo
-            echo " Use these options when you have an existing image"
-            echo " that you want to upload to Nextcloud."
-            echo
-            echo "  --file FILE   Upload from the local filesystem"
-            echo "  --paste       Upload from the system clipboard"
-            echo
+            usage
             exit 0
             ;;
         --version)
