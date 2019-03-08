@@ -11,7 +11,7 @@ _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 nextshot() {
     local image filename json url
 
-    sanity_check
+    sanity_check && setup
     parse_opts "$@"
     load_config
     init_cache
@@ -29,6 +29,18 @@ sanity_check() {
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
         echo "Your version of Bash is ${BASH_VERSION} but NextShot requires at least v4."
         exit 1
+    fi
+}
+
+setup() {
+    if [ ! -d "$_CONFIG_DIR" ]; then
+        if ! has yad; then
+            config_cli
+        else
+            config_gui
+        fi
+
+        config_complete
     fi
 }
 
@@ -412,15 +424,5 @@ savedir=''
 rename=false
 EOF
 }
-
-if [ ! -d "$_CONFIG_DIR" ]; then
-    if ! has yad; then
-        config_cli
-    else
-        config_gui
-    fi
-
-    config_complete
-fi
 
 nextshot "$@"
