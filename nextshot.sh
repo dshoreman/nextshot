@@ -34,7 +34,10 @@ sanity_check() {
 }
 
 setup() {
-    if [ ! -d "$_CONFIG_DIR" ]; then
+    [ -d "$_CONFIG_DIR" ] || mkdir -p "$_CONFIG_DIR"
+    [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
+
+    if [ ! -f "$_CONFIG_FILE" ]; then
         if ! has yad; then
             config_cli
         else
@@ -43,8 +46,6 @@ setup() {
 
         config_complete
     fi
-
-    [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
 }
 
 parse_opts() {
@@ -343,9 +344,6 @@ config_cli() {
 
     [ "${answer,,}" = "y" ] || config_abort
 
-    echo -n "Creating nextshot directory... "
-    mkdir -p "$_CONFIG_DIR" && echo "[DONE]"
-
     echo -n "Creating config template... "
     config_create && echo "[DONE]"
 
@@ -380,7 +378,7 @@ and click <b>Create new app password</b>.\n:LBL" \
         --button="gtk-cancel:1" --button="gtk-save:0" --width=400 --height=175 --form --field=":TXT" \
         "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename") || config_abort
 
-    mkdir -p "$_CONFIG_DIR" && sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
+    sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
 }
 
 config_abort() {
