@@ -179,9 +179,9 @@ load_config() {
     # shellcheck disable=SC1090
     echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE" && echo "Ready!"
 
-    : "${server:?"Required config option missing. Please set 'server' to your Nextcloud Base URL."}"
-    : "${username:?"Required config option missing. Please set 'username' to your Nextcloud username."}"
-    : "${password:?"Required config option missing. Please set 'password' to your Nextcloud App Password."}"
+    local errmsg="missing required config option."
+    : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}"
+
     rename=${rename:-false}
     rename=${rename,,}
 
