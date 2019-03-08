@@ -15,3 +15,4 @@ Quit Nextshot       ! quit" >&3
 
 echo "icon:camera-photo-symbolic" >&3
 echo "tooltip:Nextshot" >&3
+echo "action:menu" >&3
