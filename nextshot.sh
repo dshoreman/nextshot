@@ -8,6 +8,7 @@ trap 'echo -e "\nAborted by user" && exit 1' SIGINT
 readonly _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
+readonly _VERSION="0.8.2"
 
 nextshot() {
     local image filename json url
@@ -111,7 +112,7 @@ parse_opts() {
             exit 0
             ;;
         --version)
-            echo "NextShot v0.8.2"
+            echo "NextShot v${_VERSION}"
             exit 0
             ;;
         *)
