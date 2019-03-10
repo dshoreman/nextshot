@@ -91,6 +91,14 @@ new_parse_opts() {
                 usage && exit 0
                 shift
                 ;;
+            --)
+                shift; break
+                ;;
+            *)
+                echo "Option '$1' should be valid but couldn't be handled."
+                echo "Please submit an issue at https://github.com/dshoreman/nextshot/issues"
+                exit 3
+                ;;
         esac
     done
 }
