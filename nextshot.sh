@@ -89,7 +89,9 @@ new_parse_opts() {
         case "$1" in
             --help)
                 usage && exit 0
-                shift
+                ;;
+            --version)
+                echo "NextShot v${_VERSION}" && exit 0
                 ;;
             --)
                 shift; break
@@ -139,10 +141,6 @@ parse_opts() {
             mode="selection" ;;
         --window)
             mode="window"
-            ;;
-        --version)
-            echo "NextShot v${_VERSION}"
-            exit 0
             ;;
         *)
             echo "NextShot: Unrecognised option '$1'"
