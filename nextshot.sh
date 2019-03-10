@@ -15,25 +15,25 @@ usage() {
     echo "  nextshot [OPTION]"
     echo
     echo "General Options:"
-    echo "  --help        Display this help and exit"
-    echo "  --version     Output version information and exit"
+    echo "  -h, --help        Display this help and exit"
+    echo "  -V, --version     Output version information and exit"
     echo
     echo "Screenshot Modes:"
     echo
     echo " Use these options to take a new screenshot and have"
     echo " NextShot automatically upload it to Nextcloud."
     echo
-    echo "  --area        Capture only the selected area"
-    echo "  --fullscreen  Capture the entire X/Wayland display"
-    echo "  --window      Capture a single window"
+    echo "  -a, --area        Capture only the selected area"
+    echo "  -f, --fullscreen  Capture the entire X/Wayland display"
+    echo "  -w, --window      Capture a single window"
     echo
     echo "Upload Modes:"
     echo
     echo " Use these options when you have an existing image"
     echo " that you want to upload to Nextcloud."
     echo
-    echo "  --file FILE   Upload from the local filesystem"
-    echo "  --paste       Upload from the system clipboard"
+    echo "  --file FILE       Upload from the local filesystem"
+    echo "  -p, --paste       Upload from the system clipboard"
     echo
 }
 
@@ -76,10 +76,11 @@ setup() {
 }
 
 parse_opts() {
+    local -r OPTS=hVawfp
     local -r LONG=help,version,area,window,fullscreen,paste,file:
     local parsed
 
-    ! parsed=$(getopt -l "$LONG" -n "$0" -- "${@:---area}")
+    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
         exit 2
@@ -88,22 +89,22 @@ parse_opts() {
 
     while true; do
         case "$1" in
-            --help)
+            -h|--help)
                 usage && exit 0
                 ;;
-            --version)
+            -V|--version)
                 echo "NextShot v${_VERSION}" && exit 0
                 ;;
-            --area)
+            -a|--area)
                 mode="selection"
                 shift ;;
-            --window)
+            -w|--window)
                 mode="window"
                 shift ;;
-            --fullscreen)
+            -s|--fullscreen)
                 mode="fullscreen"
                 shift ;;
-            --paste)
+            -p|--paste)
                 if ! check_clipboard; then
                     echo "Clipboard does not contain an image, aborting."
                     exit 1
