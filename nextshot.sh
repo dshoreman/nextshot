@@ -76,7 +76,7 @@ setup() {
 }
 
 new_parse_opts() {
-    local -r LONG=help,version,selection,window,fullscreen,paste
+    local -r LONG=help,version,selection,window,fullscreen,paste,file:
     local parsed
 
     ! parsed=$(getopt -l "$LONG" -n "$0" -- "${@:---selection}")
@@ -110,6 +110,23 @@ new_parse_opts() {
 
                 mode="clipboard"
                 shift ;;
+            --file)
+                local mimetype
+
+                file="$2"
+                mode="file"
+
+                if [ ! -f "$PWD/$file" ]; then
+                    echo "File $file could not be found!"
+                    exit 1
+                fi
+
+                mimetype="$(file --mime-type -b "$file")"
+                if [ ! "${mimetype:0:6}" = "image/" ]; then
+                    echo "Failed MIME check: expected image/*, got '$mimetype'."
+                    exit 1
+                fi
+                shift 2 ;;
             --)
                 shift; break
                 ;;
@@ -124,26 +141,6 @@ new_parse_opts() {
 
 parse_opts() {
     case "${1:---selection}" in
-        --file)
-            local mimetype
-
-            if [ -z ${2+x} ]; then
-                echo "--file option requires a filename"
-                exit 1
-            elif [ ! -f "$PWD/$2" ]; then
-                echo "File $2 could not be found!"
-                exit 1
-            fi
-
-            mode="file"
-            file="$2"
-
-            mimetype="$(file --mime-type -b "$file")"
-            if [ ! "${mimetype:0:6}" = "image/" ]; then
-                echo "Failed MIME check: expected image/*, got '$mimetype'."
-                exit 1
-            fi
-            ;;
         *)
             echo "NextShot: Unrecognised option '$1'"
             echo "Try 'nextshot --help' for more information."
