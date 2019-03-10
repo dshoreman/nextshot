@@ -80,6 +80,9 @@ new_parse_opts() {
     local parsed
 
     ! parsed=$(getopt -l "$LONG" -n "$0" -- "$@")
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        exit 2
+    fi
     eval set -- "$parsed"
 
     while true; do
