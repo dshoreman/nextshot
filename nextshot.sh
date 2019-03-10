@@ -23,8 +23,8 @@ usage() {
     echo " Use these options to take a new screenshot and have"
     echo " NextShot automatically upload it to Nextcloud."
     echo
+    echo "  --area        Capture only the selected area"
     echo "  --fullscreen  Capture the entire X/Wayland display"
-    echo "  --selection   Capture only the selected area"
     echo "  --window      Capture a single window"
     echo
     echo "Upload Modes:"
@@ -76,10 +76,10 @@ setup() {
 }
 
 parse_opts() {
-    local -r LONG=help,version,selection,window,fullscreen,paste,file:
+    local -r LONG=help,version,area,window,fullscreen,paste,file:
     local parsed
 
-    ! parsed=$(getopt -l "$LONG" -n "$0" -- "${@:---selection}")
+    ! parsed=$(getopt -l "$LONG" -n "$0" -- "${@:---area}")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
         exit 2
@@ -94,7 +94,7 @@ parse_opts() {
             --version)
                 echo "NextShot v${_VERSION}" && exit 0
                 ;;
-            --selection)
+            --area)
                 mode="selection"
                 shift ;;
             --window)

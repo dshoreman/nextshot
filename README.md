@@ -108,7 +108,7 @@ modes bound to the Print Screen key:
 
 ```
 bindsym --release Print exec "nextshot --fullscreen"
-bindsym --release Shift+Print exec "nextshot --selection"
+bindsym --release Shift+Print exec "nextshot --area"
 bindsym --release $mod+Print exec "nextshot --window"
 ```
 
