@@ -41,7 +41,7 @@ nextshot() {
     local image filename json url
 
     sanity_check && setup
-    new_parse_opts "$@"
+    parse_opts "$@"
     load_config
 
     image=$(cache_image)
@@ -75,12 +75,13 @@ setup() {
     fi
 }
 
-new_parse_opts() {
+parse_opts() {
     local -r LONG=help,version,selection,window,fullscreen,paste,file:
     local parsed
 
     ! parsed=$(getopt -l "$LONG" -n "$0" -- "${@:---selection}")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        echo "Run 'nextshot --help' for a list of commands."
         exit 2
     fi
     eval set -- "$parsed"
@@ -137,15 +138,6 @@ new_parse_opts() {
                 ;;
         esac
     done
-}
-
-parse_opts() {
-    case "${1:---selection}" in
-        *)
-            echo "NextShot: Unrecognised option '$1'"
-            echo "Try 'nextshot --help' for more information."
-            exit 1
-    esac
 
     echo "Screenshot mode set to $mode"
 }
