@@ -41,7 +41,7 @@ nextshot() {
     local image filename json url
 
     sanity_check && setup
-    parse_opts "$@"
+    new_parse_opts "$@"
     load_config
 
     image=$(cache_image)
@@ -73,6 +73,23 @@ setup() {
 
         config_complete
     fi
+}
+
+new_parse_opts() {
+    local -r LONG=help,version
+    local parsed
+
+    ! parsed=$(getopt -l "$LONG" -n "$0" -- "$@")
+    eval set -- "$parsed"
+
+    while true; do
+        case "$1" in
+            --help)
+                usage && exit 0
+                shift
+                ;;
+        esac
+    done
 }
 
 parse_opts() {
@@ -111,10 +128,6 @@ parse_opts() {
             mode="selection" ;;
         --window)
             mode="window"
-            ;;
-        --help)
-            usage
-            exit 0
             ;;
         --version)
             echo "NextShot v${_VERSION}"
