@@ -76,10 +76,10 @@ setup() {
 }
 
 new_parse_opts() {
-    local -r LONG=help,version
+    local -r LONG=help,version,selection,window,fullscreen,paste
     local parsed
 
-    ! parsed=$(getopt -l "$LONG" -n "$0" -- "$@")
+    ! parsed=$(getopt -l "$LONG" -n "$0" -- "${@:---selection}")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         exit 2
     fi
@@ -93,6 +93,23 @@ new_parse_opts() {
             --version)
                 echo "NextShot v${_VERSION}" && exit 0
                 ;;
+            --selection)
+                mode="selection"
+                shift ;;
+            --window)
+                mode="window"
+                shift ;;
+            --fullscreen)
+                mode="fullscreen"
+                shift ;;
+            --paste)
+                if ! check_clipboard; then
+                    echo "Clipboard does not contain an image, aborting."
+                    exit 1
+                fi
+
+                mode="clipboard"
+                shift ;;
             --)
                 shift; break
                 ;;
@@ -126,21 +143,6 @@ parse_opts() {
                 echo "Failed MIME check: expected image/*, got '$mimetype'."
                 exit 1
             fi
-            ;;
-        --fullscreen)
-            mode="fullscreen" ;;
-        --paste)
-            if ! check_clipboard; then
-                echo "Clipboard does not contain an image, aborting."
-                exit 1
-            fi
-
-            mode="clipboard"
-            ;;
-        --selection)
-            mode="selection" ;;
-        --window)
-            mode="window"
             ;;
         *)
             echo "NextShot: Unrecognised option '$1'"
