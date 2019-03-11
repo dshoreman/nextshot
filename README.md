@@ -107,9 +107,9 @@ Add the following to your i3 config to have NextShot's different
 modes bound to the Print Screen key:
 
 ```
-bindsym --release Print exec "nextshot --fullscreen"
-bindsym --release Shift+Print exec "nextshot --selection"
-bindsym --release $mod+Print exec "nextshot --window"
+bindsym --release Print exec "nextshot -f"
+bindsym --release Shift+Print exec "nextshot -a"
+bindsym --release $mod+Print exec "nextshot -w"
 ```
 
 Note that due to limitations with ImageMagick's `import` tool, it is not possible
