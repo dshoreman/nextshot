@@ -15,25 +15,25 @@ usage() {
     echo "  nextshot [OPTION]"
     echo
     echo "General Options:"
-    echo "  --help        Display this help and exit"
-    echo "  --version     Output version information and exit"
+    echo "  -h, --help        Display this help and exit"
+    echo "  -V, --version     Output version information and exit"
     echo
     echo "Screenshot Modes:"
     echo
     echo " Use these options to take a new screenshot and have"
     echo " NextShot automatically upload it to Nextcloud."
     echo
-    echo "  --fullscreen  Capture the entire X/Wayland display"
-    echo "  --selection   Capture only the selected area"
-    echo "  --window      Capture a single window"
+    echo "  -a, --area        Capture only the selected area"
+    echo "  -f, --fullscreen  Capture the entire X/Wayland display"
+    echo "  -w, --window      Capture a single window"
     echo
     echo "Upload Modes:"
     echo
     echo " Use these options when you have an existing image"
     echo " that you want to upload to Nextcloud."
     echo
-    echo "  --file FILE   Upload from the local filesystem"
-    echo "  --paste       Upload from the system clipboard"
+    echo "  --file FILE       Upload from the local filesystem"
+    echo "  -p, --paste       Upload from the system clipboard"
     echo
 }
 
@@ -54,6 +54,12 @@ nextshot() {
 }
 
 sanity_check() {
+    ! getopt -T > /dev/null
+    if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+        echo "Enhanced getopt is not available. Aborting."
+        exit 1
+    fi
+
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
         echo "Your version of Bash is ${BASH_VERSION} but NextShot requires at least v4."
         exit 1
@@ -76,55 +82,69 @@ setup() {
 }
 
 parse_opts() {
-    case "${1:---selection}" in
-        --file)
-            local mimetype
+    local -r OPTS=hVawfp
+    local -r LONG=help,version,area,window,fullscreen,paste,file:
+    local parsed
 
-            if [ -z ${2+x} ]; then
-                echo "--file option requires a filename"
-                exit 1
-            elif [ ! -f "$PWD/$2" ]; then
-                echo "File $2 could not be found!"
-                exit 1
-            fi
+    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
+    if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
+        echo "Run 'nextshot --help' for a list of commands."
+        exit 2
+    fi
+    eval set -- "$parsed"
 
-            mode="file"
-            file="$2"
+    while true; do
+        case "$1" in
+            -h|--help)
+                usage && exit 0
+                ;;
+            -V|--version)
+                echo "NextShot v${_VERSION}" && exit 0
+                ;;
+            -a|--area)
+                mode="selection"
+                shift ;;
+            -w|--window)
+                mode="window"
+                shift ;;
+            -s|--fullscreen)
+                mode="fullscreen"
+                shift ;;
+            -p|--paste)
+                if ! check_clipboard; then
+                    echo "Clipboard does not contain an image, aborting."
+                    exit 1
+                fi
 
-            mimetype="$(file --mime-type -b "$file")"
-            if [ ! "${mimetype:0:6}" = "image/" ]; then
-                echo "Failed MIME check: expected image/*, got '$mimetype'."
-                exit 1
-            fi
-            ;;
-        --fullscreen)
-            mode="fullscreen" ;;
-        --paste)
-            if ! check_clipboard; then
-                echo "Clipboard does not contain an image, aborting."
-                exit 1
-            fi
+                mode="clipboard"
+                shift ;;
+            --file)
+                local mimetype
 
-            mode="clipboard"
-            ;;
-        --selection)
-            mode="selection" ;;
-        --window)
-            mode="window"
-            ;;
-        --help)
-            usage
-            exit 0
-            ;;
-        --version)
-            echo "NextShot v${_VERSION}"
-            exit 0
-            ;;
-        *)
-            echo "NextShot: Unrecognised option '$1'"
-            echo "Try 'nextshot --help' for more information."
-            exit 1
-    esac
+                file="$2"
+                mode="file"
+
+                if [ ! -f "$PWD/$file" ]; then
+                    echo "File $file could not be found!"
+                    exit 1
+                fi
+
+                mimetype="$(file --mime-type -b "$file")"
+                if [ ! "${mimetype:0:6}" = "image/" ]; then
+                    echo "Failed MIME check: expected image/*, got '$mimetype'."
+                    exit 1
+                fi
+                shift 2 ;;
+            --)
+                shift; break
+                ;;
+            *)
+                echo "Option '$1' should be valid but couldn't be handled."
+                echo "Please submit an issue at https://github.com/dshoreman/nextshot/issues"
+                exit 3
+                ;;
+        esac
+    done
 
     echo "Screenshot mode set to $mode"
 }
