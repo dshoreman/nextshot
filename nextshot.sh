@@ -54,6 +54,12 @@ nextshot() {
 }
 
 sanity_check() {
+    ! getopt -T > /dev/null
+    if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
+        echo "Enhanced getopt is not available. Aborting."
+        exit 1
+    fi
+
     if [ "${BASH_VERSINFO:-0}" -lt 4 ]; then
         echo "Your version of Bash is ${BASH_VERSION} but NextShot requires at least v4."
         exit 1
