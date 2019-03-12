@@ -57,13 +57,13 @@ nextshot() {
 }
 
 tray_menu() {
-    local files_url="$server/apps/files/?dir=/$savedir"
-
     if [ -f "$_TRAY_FIFO.pid" ] && ps -p "$(<"$_TRAY_FIFO.pid")" > /dev/null 2>&1
     then
         echo "NextShot tray menu is already running!" >&2
         exit 1
     fi
+
+    load_config && local files_url="$server/apps/files/?dir=/$savedir"
 
     echo "Starting Nextshot tray menu..." >&2
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
