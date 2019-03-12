@@ -9,6 +9,7 @@ readonly _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
+readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
 readonly _VERSION="0.8.2"
 
 usage() {
@@ -58,10 +59,17 @@ nextshot() {
 tray_menu() {
     local files_url="$server/apps/files/?dir=/$savedir"
 
-    PIPE="$_RUNTIME_DIR/traymenu"
-    rm -f "$PIPE"; mkfifo "$PIPE" && exec 3<> "$PIPE"
+    if [ -f "$_TRAY_FIFO.pid" ] && ps -p "$(<"$_TRAY_FIFO.pid")" > /dev/null 2>&1
+    then
+        echo "NextShot tray menu is already running!" >&2
+        exit 1
+    fi
+
+    echo "Starting Nextshot tray menu..." >&2
+    rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
 
     yad --notification --listen --no-middle <&3 &
+    echo $! > "$_RUNTIME_DIR/traymenu.pid"
 
     echo "menu:\
 Open Nextcloud      ! xdg-open $files_url ||\
