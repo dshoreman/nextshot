@@ -16,6 +16,7 @@ usage() {
     echo
     echo "General Options:"
     echo "  -h, --help        Display this help and exit"
+    echo "  -t, --tray        Start the NextShot tray menu"
     echo "  -V, --version     Output version information and exit"
     echo
     echo "Screenshot Modes:"
@@ -53,6 +54,26 @@ nextshot() {
     echo "$url" | to_clipboard && send_notification
 }
 
+tray_menu() {
+    local files_url="$server/apps/files/?dir=/$savedir"
+
+    PIPE="/tmp/.pipe.tmp"
+    rm -f "$PIPE"; mkfifo "$PIPE" && exec 3<> "$PIPE"
+
+    yad --notification --listen --no-middle <&3 &
+
+    echo "menu:\
+Open Nextcloud      ! xdg-open $files_url ||\
+Capture area        ! nextshot -a          |\
+Capture window      ! nextshot -w          |\
+Capture full screen ! nextshot -f         ||\
+Quit Nextshot       !quit" >&3
+
+    echo "icon:camera-photo-symbolic" >&3
+    echo "tooltip:Nextshot" >&3
+    echo "action:menu" >&3
+}
+
 sanity_check() {
     ! getopt -T > /dev/null
     if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
@@ -82,8 +103,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=hVawfp
-    local -r LONG=help,version,area,window,fullscreen,paste,file:
+    local -r OPTS=htVawfp
+    local -r LONG=help,tray,version,area,window,fullscreen,paste,file:
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
@@ -97,6 +118,9 @@ parse_opts() {
         case "$1" in
             -h|--help)
                 usage && exit 0
+                ;;
+            -t|--tray)
+                tray_menu && exit 0
                 ;;
             -V|--version)
                 echo "NextShot v${_VERSION}" && exit 0
