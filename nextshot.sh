@@ -268,7 +268,10 @@ parse_colour() {
 
 cache_image() {
     if [ "$mode" = "file" ]; then
-        cp "$PWD/$file" "$_CACHE_DIR/$file" && echo "$file"
+        local filename
+        filename="$(basename "$file")"
+
+        cp "$file" "$_CACHE_DIR/$filename" && echo "$filename"
     else
         take_screenshot
     fi
