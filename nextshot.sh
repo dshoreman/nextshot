@@ -72,11 +72,11 @@ tray_menu() {
     echo $! > "$_RUNTIME_DIR/traymenu.pid"
 
     echo "menu:\
-Open Nextcloud      ! xdg-open $files_url ||\
-Capture area        ! nextshot -a          |\
-Capture window      ! nextshot -w          |\
-Capture full screen ! nextshot -f         ||\
-Quit Nextshot       !quit" >&3
+Open Nextcloud      ! xdg-open $files_url !emblem-web||\
+Capture area        ! nextshot -a         !window-maximize-symbolic|\
+Capture window      ! nextshot -w         !window-new|\
+Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
+Quit Nextshot       !quit                 !gtk-quit" >&3
 
     echo "icon:camera-photo-symbolic" >&3
     echo "tooltip:Nextshot" >&3
