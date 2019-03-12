@@ -164,12 +164,9 @@ parse_opts() {
                 file="$2"
                 mode="file"
 
-                if [ ! -f "$PWD/$file" ]; then
-                    echo "File $file could not be found!"
-                    exit 1
-                fi
+                # If file cannot be found here, $mimetype will be the error from `file`
+                mimetype="$(file -E --mime-type -b "$file")" || (echo "$mimetype" && exit 1)
 
-                mimetype="$(file --mime-type -b "$file")"
                 if [ ! "${mimetype:0:6}" = "image/" ]; then
                     echo "Failed MIME check: expected image/*, got '$mimetype'."
                     exit 1
