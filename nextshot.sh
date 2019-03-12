@@ -68,7 +68,7 @@ tray_menu() {
     echo "Starting Nextshot tray menu..." >&2
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
 
-    yad --notification --listen --no-middle <&3 &
+    yad --notification --listen --no-middle --command="nextshot -a" <&3 &
     echo $! > "$_RUNTIME_DIR/traymenu.pid"
 
     echo "menu:\
@@ -80,7 +80,6 @@ Quit Nextshot       !quit" >&3
 
     echo "icon:camera-photo-symbolic" >&3
     echo "tooltip:Nextshot" >&3
-    echo "action:menu" >&3
 }
 
 sanity_check() {
