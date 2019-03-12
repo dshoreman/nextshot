@@ -7,7 +7,9 @@ trap 'echo -e "\nAborted by user" && exit 1' SIGINT
 
 readonly _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
+readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
+readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
 readonly _VERSION="0.8.2"
 
 usage() {
@@ -16,6 +18,7 @@ usage() {
     echo
     echo "General Options:"
     echo "  -h, --help        Display this help and exit"
+    echo "  -t, --tray        Start the NextShot tray menu"
     echo "  -V, --version     Output version information and exit"
     echo
     echo "Screenshot Modes:"
@@ -53,6 +56,33 @@ nextshot() {
     echo "$url" | to_clipboard && send_notification
 }
 
+tray_menu() {
+    if [ -f "$_TRAY_FIFO.pid" ] && ps -p "$(<"$_TRAY_FIFO.pid")" > /dev/null 2>&1
+    then
+        echo "NextShot tray menu is already running!" >&2
+        exit 1
+    fi
+
+    load_config && local files_url="$server/apps/files/?dir=/$savedir"
+
+    echo "Starting Nextshot tray menu..." >&2
+    rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
+
+    yad --notification --listen --no-middle --command="nextshot -a" <&3 &
+    echo $! > "$_RUNTIME_DIR/traymenu.pid"
+
+    echo "menu:\
+Open Nextcloud      ! xdg-open $files_url !emblem-web||\
+Capture area        ! nextshot -a         !window-maximize-symbolic|\
+Capture window      ! nextshot -w         !window-new|\
+Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
+Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
+Quit Nextshot       !quit                 !gtk-quit" >&3
+
+    echo "icon:camera-photo-symbolic" >&3
+    echo "tooltip:Nextshot" >&3
+}
+
 sanity_check() {
     ! getopt -T > /dev/null
     if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
@@ -69,6 +99,7 @@ sanity_check() {
 setup() {
     [ -d "$_CONFIG_DIR" ] || mkdir -p "$_CONFIG_DIR"
     [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
+    [ -d "$_RUNTIME_DIR" ] || mkdir -p "$_RUNTIME_DIR"
 
     if [ ! -f "$_CONFIG_FILE" ]; then
         if ! has yad; then
@@ -82,8 +113,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=hVawfp
-    local -r LONG=help,version,area,window,fullscreen,paste,file:
+    local -r OPTS=htVawfp
+    local -r LONG=help,tray,version,area,window,fullscreen,paste,file:
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
@@ -97,6 +128,15 @@ parse_opts() {
         case "$1" in
             -h|--help)
                 usage && exit 0
+                ;;
+            -t|--tray)
+                if ! has yad; then
+                    echo "Yad is required for the NextShot tray icon."
+                    echo "Please install yad or run nextshot --help for CLI options."
+                    exit 1
+                fi
+
+                tray_menu && exit 0
                 ;;
             -V|--version)
                 echo "NextShot v${_VERSION}" && exit 0
