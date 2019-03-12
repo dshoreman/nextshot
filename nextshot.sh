@@ -7,6 +7,7 @@ trap 'echo -e "\nAborted by user" && exit 1' SIGINT
 
 readonly _CACHE_DIR="${XDG_CACHE_HOME:-"$HOME/.cache"}/nextshot"
 readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
+readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _VERSION="0.8.2"
 
@@ -57,7 +58,7 @@ nextshot() {
 tray_menu() {
     local files_url="$server/apps/files/?dir=/$savedir"
 
-    PIPE="/tmp/.pipe.tmp"
+    PIPE="$_RUNTIME_DIR/traymenu"
     rm -f "$PIPE"; mkfifo "$PIPE" && exec 3<> "$PIPE"
 
     yad --notification --listen --no-middle <&3 &
@@ -90,6 +91,7 @@ sanity_check() {
 setup() {
     [ -d "$_CONFIG_DIR" ] || mkdir -p "$_CONFIG_DIR"
     [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
+    [ -d "$_RUNTIME_DIR" ] || mkdir -p "$_RUNTIME_DIR"
 
     if [ ! -f "$_CONFIG_FILE" ]; then
         if ! has yad; then
