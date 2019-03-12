@@ -130,6 +130,12 @@ parse_opts() {
                 usage && exit 0
                 ;;
             -t|--tray)
+                if ! has yad; then
+                    echo "Yad is required for the NextShot tray icon."
+                    echo "Please install yad or run nextshot --help for CLI options."
+                    exit 1
+                fi
+
                 tray_menu && exit 0
                 ;;
             -V|--version)
