@@ -219,7 +219,7 @@ status_check() {
     local req=(curl)
     local opt=(yad)
     local reqW=(grim jq slurp wl-clipboard)
-    local reqX=(slop import xclip)
+    local reqX=(slop "import imagemagick" xclip)
 
     echo; echo -n "Detected environment: "
     is_wayland && echo "Wayland" || echo "X11"
@@ -233,8 +233,14 @@ status_check() {
 
 check_deps() {
     for dep in "$@"; do
-        has "$dep" && echo "✔ $dep" || echo "✘ $dep"
+        read -ra dep <<<"$dep"
+        check_dep "${dep[0]}" "${dep[1]}"
     done
+}
+
+check_dep() {
+    local pkg="${2:-$1}"
+    has "$dep" && echo " ✔ $pkg" || echo " ✘ $pkg"
 }
 
 check_clipboard() {
