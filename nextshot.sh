@@ -237,8 +237,8 @@ status_check() {
     echo
 
     echo "Global dependencies"; check_deps "${reqG[@]}"; echo
-    echo "X11 dependencies"; check_deps "${reqX[@]}"; echo
     echo "Wayland dependencies"; check_deps "${reqW[@]}"; echo
+    echo "X11 dependencies"; check_deps "${reqX[@]}"; echo
 }
 
 check_deps() {
