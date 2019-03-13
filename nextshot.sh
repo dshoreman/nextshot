@@ -255,7 +255,9 @@ status_check() {
         "xclip  xclip       to interact with the clipboard"
     )
 
-    echo; echo -n "Detected environment: "
+    echo
+    echo "Current version: Nextshot v${_VERSION}"
+    echo -n "Detected environment: "
     is_wayland && echo "Wayland" || echo "X11"
     echo
 
