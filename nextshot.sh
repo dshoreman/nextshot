@@ -17,7 +17,7 @@ usage() {
     echo "  nextshot [OPTION]"
     echo
     echo "General Options:"
-    echo "  -D, --deps        List dependency statuses and exit"
+    echo "  -D, --deps[=TYPE] List dependency statuses and exit"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
     echo "  -V, --version     Output version information and exit"
@@ -38,6 +38,16 @@ usage() {
     echo
     echo "  --file FILE       Upload from the local filesystem"
     echo "  -p, --paste       Upload from the system clipboard"
+    echo; echo
+    echo "The TYPE argument of -D, --deps can be one of 'g' or 'global,"
+    echo "'w' or 'wayland', 'x' or 'x11', 'a' or 'all', or omitted for"
+    echo "auto. When TYPE is set to 'global', it will only list the"
+    echo "global dependencies. Setting it to 'wayland' or 'x11' will"
+    echo "list both the global dependencies and those of the respective"
+    echo "environment, whereas 'all' will list global, Wayland *and* X11"
+    echo "dependencies. When omitted, dependencies are listed based on"
+    echo "the currently active environment as detected by Nextshot."
+    echo "Note that TYPE is case-insensitive. -DA is the same as -Da."
     echo
 }
 
@@ -114,8 +124,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=DhtVawfp
-    local -r LONG=deps,dependencies,help,tray,version,area,window,fullscreen,paste,file:
+    local -r OPTS=D::htVawfp
+    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
@@ -128,7 +138,20 @@ parse_opts() {
     while true; do
         case "$1" in
             -D|--deps|--dependencies)
-                status_check && exit 0 ;;
+                local chk=${2//=}
+                case "${chk,,}" in
+                    a|all)
+                        chk=a ;;
+                    g|global)
+                        chk=g ;;
+                    w|wayland)
+                        chk=w ;;
+                    x|x11)
+                        chk=x ;;
+                    *)
+                        is_wayland && chk="w" || chk="x" ;;
+                esac
+                status_check "$chk" && exit 0 ;;
             -h|--help)
                 usage && exit 0
                 ;;
@@ -237,8 +260,15 @@ status_check() {
     echo
 
     echo "Global dependencies"; check_deps "${reqG[@]}"; echo
-    echo "Wayland dependencies"; check_deps "${reqW[@]}"; echo
-    echo "X11 dependencies"; check_deps "${reqX[@]}"; echo
+    [ "$1" = "g" ] && exit 0
+
+    if [ "$1" = "a" ] || [ "$1" = "w" ]; then
+        echo "Wayland dependencies"; check_deps "${reqW[@]}"; echo
+    fi
+
+    if [ "$1" = "a" ] || [ "$1" = "x" ]; then
+        echo "X11 dependencies"; check_deps "${reqX[@]}"; echo
+    fi
 }
 
 check_deps() {
