@@ -153,8 +153,7 @@ parse_opts() {
                 esac
                 status_check "$chk" && exit 0 ;;
             -h|--help)
-                usage && exit 0
-                ;;
+                usage && exit 0 ;;
             -t|--tray)
                 if ! has yad; then
                     echo "Yad is required for the NextShot tray icon."
@@ -162,28 +161,21 @@ parse_opts() {
                     exit 1
                 fi
 
-                tray_menu && exit 0
-                ;;
+                tray_menu && exit 0 ;;
             -V|--version)
-                echo "NextShot v${_VERSION}" && exit 0
-                ;;
+                echo "NextShot v${_VERSION}" && exit 0 ;;
             -a|--area)
-                mode="selection"
-                shift ;;
+                mode="selection"; shift ;;
             -w|--window)
-                mode="window"
-                shift ;;
+                mode="window"; shift ;;
             -s|--fullscreen)
-                mode="fullscreen"
-                shift ;;
+                mode="fullscreen"; shift ;;
             -p|--paste)
                 if ! check_clipboard; then
                     echo "Clipboard does not contain an image, aborting."
                     exit 1
                 fi
-
-                mode="clipboard"
-                shift ;;
+                mode="clipboard"; shift ;;
             --file)
                 local mimetype
 
@@ -199,13 +191,11 @@ parse_opts() {
                 fi
                 shift 2 ;;
             --)
-                shift; break
-                ;;
+                shift; break ;;
             *)
                 echo "Option '$1' should be valid but couldn't be handled."
                 echo "Please submit an issue at https://github.com/dshoreman/nextshot/issues"
-                exit 3
-                ;;
+                exit 3 ;;
         esac
     done
 
