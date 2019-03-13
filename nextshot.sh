@@ -216,31 +216,45 @@ make_url() {
 }
 
 status_check() {
-    local req=(curl)
-    local opt=(yad)
-    local reqW=(grim jq slurp wl-clipboard)
-    local reqX=(slop "import imagemagick" xclip)
+    local reqG=(
+        "curl curl to interact with Nextcloud"
+        "yad  yad  for the tray icon and to display config and rename windows"
+    )
+    local reqW=(
+        "grim           grim         to take screenshots"
+        "jq             jq           to list visible windows"
+        "slurp          slurp        for area selection"
+        "wl-clipboard   wl-clipboard to interact with the clipboard"
+    )
+    local reqX=(
+        "slop   slop        for window and area selection"
+        "import imagemagick to take screenshots"
+        "xclip  xclip       to interact with the clipboard"
+    )
 
     echo; echo -n "Detected environment: "
     is_wayland && echo "Wayland" || echo "X11"
     echo
 
-    echo "Required dependencies"; check_deps "${req[@]}"; echo
-    echo "Required dependencies (X11)"; check_deps "${reqX[@]}"; echo
-    echo "Required dependencies (Wayland)"; check_deps "${reqW[@]}"; echo
-    echo "Optional dependencies"; check_deps "${opt[@]}"; echo
+    echo "Global dependencies"; check_deps "${reqG[@]}"; echo
+    echo "X11 dependencies"; check_deps "${reqX[@]}"; echo
+    echo "Wayland dependencies"; check_deps "${reqW[@]}"; echo
 }
 
 check_deps() {
+    local dep
+
     for dep in "$@"; do
         read -ra dep <<<"$dep"
-        check_dep "${dep[0]}" "${dep[1]}"
+        check_dep "${dep[@]}"
     done
 }
 
 check_dep() {
-    local pkg="${2:-$1}"
-    has "$dep" && echo " ✔ $pkg" || echo " ✘ $pkg"
+    local pkg="$2"; shift 2
+
+    has "$dep" && echo -n " ✔ $pkg" || echo -n " ✘ $pkg"
+    echo " -- $*"
 }
 
 check_clipboard() {
