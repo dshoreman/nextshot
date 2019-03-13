@@ -221,6 +221,10 @@ status_check() {
     local reqW=(grim jq slurp wl-clipboard)
     local reqX=(slop import xclip)
 
+    echo; echo -n "Detected environment: "
+    is_wayland && echo "Wayland" || echo "X11"
+    echo
+
     echo "Required dependencies"; check_deps "${req[@]}"; echo
     echo "Required dependencies (X11)"; check_deps "${reqX[@]}"; echo
     echo "Required dependencies (Wayland)"; check_deps "${reqW[@]}"; echo
