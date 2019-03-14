@@ -443,7 +443,7 @@ select_window() {
         titles+=("$title")
 
         if has yad; then
-            yadlist+=("$title" "$size")
+            yadlist+=($num "$title" "$size")
         else
             echo "[$num] $title" >&2
         fi
@@ -451,7 +451,7 @@ select_window() {
     done <<< "$windows"
 
     if has yad; then
-        select_window_gui
+        choice=$(select_window_gui)
     else
         select_window_cli
     fi
@@ -475,7 +475,8 @@ select_window_cli() {
 }
 
 select_window_gui() {
-    yad --list --column="Window Title" --column="Dimensions" "${yadlist[@]}"
+    yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
+        --column="Window Title" --column="Dimensions" "${yadlist[@]}"
 }
 
 send_notification() {
