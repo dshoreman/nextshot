@@ -428,10 +428,11 @@ nc_share() {
 }
 
 select_window() {
-    local windows window choice num max size offset geometries title titles
+    local windows window choice num max size offset geometries title titles yadlist
 
     windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
     geometries=()
+    yadlist=()
     titles=()
 
     echo "Found the following visible windows:" >&2
@@ -441,10 +442,25 @@ select_window() {
         geometries+=("$offset $size")
         titles+=("$title")
 
-        echo "[$num] $title" >&2
+        if has yad; then
+            yadlist+=("$title" "$size")
+        else
+            echo "[$num] $title" >&2
+        fi
         ((num+=1))
     done <<< "$windows"
 
+    if has yad; then
+        select_window_gui
+    else
+        select_window_cli
+    fi
+
+    echo "Selected window $choice: ${titles[$choice]}" >&2
+    echo "${geometries[$choice]}"
+}
+
+select_window_cli() {
     ((max="$num-1"))
     choice=-1
 
@@ -456,9 +472,10 @@ select_window() {
             choice=-1
         fi
     done
+}
 
-    echo "Selected window $choice: ${titles[$choice]}" >&2
-    echo "${geometries[$choice]}"
+select_window_gui() {
+    yad --list --column="Window Title" --column="Dimensions" "${yadlist[@]}"
 }
 
 send_notification() {
