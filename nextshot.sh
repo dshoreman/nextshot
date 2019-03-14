@@ -443,7 +443,7 @@ select_window() {
         titles+=("$title")
 
         if has yad; then
-            yadlist+=($num "$title" "$size")
+            yadlist+=("$num" "$title" "$size")
         else
             echo "[$num] $title" >&2
         fi
@@ -452,6 +452,7 @@ select_window() {
 
     if has yad; then
         choice=$(select_window_gui)
+        choice=${choice//|}
     else
         select_window_cli
     fi
