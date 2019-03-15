@@ -484,6 +484,7 @@ select_window_cli() {
 
 select_window_gui() {
     choice=$(yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
+        --width=550 --height=400 --title"NextShot: Select window to capture" \
         --column="Window Title" --column="Dimensions" "${yadlist[@]}") || \
         (echo "Window selection cancelled by user." >&2; exit 1)
     choice=${choice//|}
