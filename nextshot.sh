@@ -38,6 +38,14 @@ usage() {
     echo
     echo "  --file FILE       Upload from the local filesystem"
     echo "  -p, --paste       Upload from the system clipboard"
+    echo
+    echo "Output Modes:"
+    echo
+    echo " These options can be used in addition to one of the"
+    echo " aforementioned Screenshot or Upload Modes. If none"
+    echo " are used, the default is to upload to Nextcloud."
+    echo
+    echo "  -c, --clipboard   Copy the captured image to clipboard"
     echo; echo
     echo "The TYPE argument of -D, --deps can be one of 'g' or 'global,"
     echo "'w' or 'wayland', 'x' or 'x11', 'a' or 'all', or omitted for"
