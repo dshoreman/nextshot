@@ -38,6 +38,14 @@ usage() {
     echo
     echo "  --file FILE       Upload from the local filesystem"
     echo "  -p, --paste       Upload from the system clipboard"
+    echo
+    echo "Output Modes:"
+    echo
+    echo " These options can be used in addition to one of the"
+    echo " aforementioned Screenshot or Upload Modes. If none"
+    echo " are used, the default is to upload to Nextcloud."
+    echo
+    echo "  -c, --clipboard   Copy the captured image to clipboard"
     echo; echo
     echo "The TYPE argument of -D, --deps can be one of 'g' or 'global,"
     echo "'w' or 'wayland', 'x' or 'x11', 'a' or 'all', or omitted for"
@@ -53,18 +61,26 @@ usage() {
 
 nextshot() {
     local image filename json url
+    output_mode="nextcloud"
 
     sanity_check && setup
     parse_opts "$@"
     load_config
 
     image=$(cache_image)
-    filename="$(echo "$image" | nc_upload)"
 
-    json=$(nc_share "$filename")
-    url="$(echo "$json" | make_url)"
+    if [ "$output_mode" = "clipboard" ]; then
+        echo "Copying image to clipboard..."
+        to_clipboard image < "$_CACHE_DIR/$image" && \
+            send_notification "Your image is ready to paste!"
+    else
+        filename="$(echo "$image" | nc_upload)"
 
-    echo "$url" | to_clipboard && send_notification
+        json=$(nc_share "$filename")
+        url="$(echo "$json" | make_url)"
+
+        echo "$url" | to_clipboard && send_notification
+    fi
 }
 
 tray_menu() {
@@ -124,8 +140,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawfp
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:
+    local -r OPTS=D::htVawfpc
+    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
@@ -190,6 +206,8 @@ parse_opts() {
                     exit 1
                 fi
                 shift 2 ;;
+            -c|--clipboard)
+                output_mode="clipboard"; shift ;;
             --)
                 shift; break ;;
             *)
@@ -200,6 +218,7 @@ parse_opts() {
     done
 
     echo "Screenshot mode set to $mode"
+    echo "Output will be sent to ${output_mode^}"
 }
 
 filter_key() {
@@ -303,9 +322,13 @@ from_clipboard() {
 }
 
 to_clipboard() {
-    if is_wayland; then wl-copy
+    local mime
+
+    [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
+
+    if is_wayland; then wl-copy -t $mime
     else
-        xclip -selection clipboard
+        xclip -selection clipboard -t $mime
     fi
 }
 
@@ -493,9 +516,9 @@ select_window_gui() {
 send_notification() {
     if has notify-send; then
         notify-send -u normal -t 5000 -i insert-link NextShot \
-            "<a href=\"$url\">Your link</a> is ready to paste!"
+            "${1:-"<a href=\"$url\">Your link</a> is ready to paste!"}"
     else
-        echo "Link $url copied to clipboard. Paste away!"
+        echo "${1:-"Link $url copied to clipboard. Paste away!"}"
     fi
 }
 
