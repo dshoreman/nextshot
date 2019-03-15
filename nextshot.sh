@@ -63,7 +63,8 @@ nextshot() {
 
     if [ "$output_mode" = "clipboard" ]; then
         echo "Copying image to clipboard..."
-        to_clipboard < "$_CACHE_DIR/$image"
+        to_clipboard < "$_CACHE_DIR/$image" && \
+            send_notification "Your image is ready to paste!"
     else
         filename="$(echo "$image" | nc_upload)"
 
@@ -503,9 +504,9 @@ select_window_gui() {
 send_notification() {
     if has notify-send; then
         notify-send -u normal -t 5000 -i insert-link NextShot \
-            "<a href=\"$url\">Your link</a> is ready to paste!"
+            "${1:-"<a href=\"$url\">Your link</a> is ready to paste!"}"
     else
-        echo "Link $url copied to clipboard. Paste away!"
+        echo "${1:-"Link $url copied to clipboard. Paste away!"}"
     fi
 }
 
