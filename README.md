@@ -1,5 +1,8 @@
 # NextShot
 
+[![Master Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=master)](https://travis-ci.com/dshoreman/nextshot)
+[![Develop Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=develop)](https://travis-ci.com/dshoreman/nextshot)
+
 NextShot is a simple utility that shares your screenshots via NextCloud,
 automatically copying the link to your clipboard.
 
