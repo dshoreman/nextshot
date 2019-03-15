@@ -60,12 +60,18 @@ nextshot() {
     load_config
 
     image=$(cache_image)
-    filename="$(echo "$image" | nc_upload)"
 
-    json=$(nc_share "$filename")
-    url="$(echo "$json" | make_url)"
+    if [ "$output_mode" = "clipboard" ]; then
+        echo "Copying image to clipboard..."
+        to_clipboard < "$_CACHE_DIR/$image"
+    else
+        filename="$(echo "$image" | nc_upload)"
 
-    echo "$url" | to_clipboard && send_notification
+        json=$(nc_share "$filename")
+        url="$(echo "$json" | make_url)"
+
+        echo "$url" | to_clipboard && send_notification
+    fi
 }
 
 tray_menu() {
@@ -309,7 +315,7 @@ from_clipboard() {
 to_clipboard() {
     if is_wayland; then wl-copy
     else
-        xclip -selection clipboard
+        xclip -selection clipboard -t image/png
     fi
 }
 
