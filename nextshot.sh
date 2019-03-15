@@ -168,7 +168,7 @@ parse_opts() {
                 mode="selection"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
-            -s|--fullscreen)
+            -f|--fullscreen)
                 mode="fullscreen"; shift ;;
             -p|--paste)
                 if ! check_clipboard; then
