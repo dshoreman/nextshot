@@ -71,7 +71,7 @@ nextshot() {
 
     if [ "$output_mode" = "clipboard" ]; then
         echo "Copying image to clipboard..."
-        to_clipboard < "$_CACHE_DIR/$image" && \
+        to_clipboard image < "$_CACHE_DIR/$image" && \
             send_notification "Your image is ready to paste!"
     else
         filename="$(echo "$image" | nc_upload)"
@@ -322,9 +322,13 @@ from_clipboard() {
 }
 
 to_clipboard() {
-    if is_wayland; then wl-copy
+    local mime
+
+    [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
+
+    if is_wayland; then wl-copy -t $mime
     else
-        xclip -selection clipboard -t image/png
+        xclip -selection clipboard -t $mime
     fi
 }
 
