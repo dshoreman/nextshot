@@ -210,6 +210,11 @@ has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
+# shellcheck disable=SC2009
+is_interactive() {
+    ps -o stat= -p $$ | grep -q '+'
+}
+
 is_wayland() {
     [ -n "${WAYLAND_DISPLAY+x}" ]
 }
@@ -442,19 +447,19 @@ select_window() {
         geometries+=("$offset $size")
         titles+=("$title")
 
-        if has yad; then
-            yadlist+=("$num" "$title" "$size")
-        else
+        if is_interactive; then
             echo "[$num] $title" >&2
+        else
+            yadlist+=("$num" "$title" "$size")
         fi
         ((num+=1))
     done <<< "$windows"
 
-    if has yad; then
+    if is_interactive; then
+        select_window_cli
+    else
         choice=$(select_window_gui)
         choice=${choice//|}
-    else
-        select_window_cli
     fi
 
     echo "Selected window $choice: ${titles[$choice]}" >&2
