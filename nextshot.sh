@@ -210,6 +210,11 @@ has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
+# shellcheck disable=SC2009
+is_interactive() {
+    ps -o stat= -p $$ | grep -q '+'
+}
+
 is_wayland() {
     [ -n "${WAYLAND_DISPLAY+x}" ]
 }
@@ -428,10 +433,11 @@ nc_share() {
 }
 
 select_window() {
-    local windows window choice num max size offset geometries title titles
+    local windows window choice num max size offset geometries title titles yadlist
 
     windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
     geometries=()
+    yadlist=()
     titles=()
 
     echo "Found the following visible windows:" >&2
@@ -441,10 +447,28 @@ select_window() {
         geometries+=("$offset $size")
         titles+=("$title")
 
-        echo "[$num] $title" >&2
+        if is_interactive; then
+            echo "[$num] $title" >&2
+        else
+            yadlist+=("$num" "$title" "$size")
+        fi
         ((num+=1))
     done <<< "$windows"
 
+    if is_interactive; then
+        select_window_cli
+    elif has yad; then
+        select_window_gui
+    else
+        echo "Unable to display window selection. Install Yad or run 'nextshot -w' in a terminal." >&2
+        exit 1
+    fi
+
+    echo "Selected window $choice: ${titles[$choice]}" >&2
+    echo "${geometries[$choice]}"
+}
+
+select_window_cli() {
     ((max="$num-1"))
     choice=-1
 
@@ -456,9 +480,14 @@ select_window() {
             choice=-1
         fi
     done
+}
 
-    echo "Selected window $choice: ${titles[$choice]}" >&2
-    echo "${geometries[$choice]}"
+select_window_gui() {
+    choice=$(yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
+        --width=550 --height=400 --title"NextShot: Select window to capture" \
+        --column="Window Title" --column="Dimensions" "${yadlist[@]}") || \
+        (echo "Window selection cancelled by user." >&2; exit 1)
+    choice=${choice//|}
 }
 
 send_notification() {
