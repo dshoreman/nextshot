@@ -53,6 +53,7 @@ usage() {
 
 nextshot() {
     local image filename json url
+    output_mode="nextcloud"
 
     sanity_check && setup
     parse_opts "$@"
@@ -124,8 +125,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawfp
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:
+    local -r OPTS=D::htVawfpc
+    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
@@ -190,6 +191,8 @@ parse_opts() {
                     exit 1
                 fi
                 shift 2 ;;
+            -c|--clipboard)
+                output_mode="clipboard"; shift ;;
             --)
                 shift; break ;;
             *)
@@ -200,6 +203,7 @@ parse_opts() {
     done
 
     echo "Screenshot mode set to $mode"
+    echo "Output will be sent to ${output_mode^}"
 }
 
 filter_key() {
