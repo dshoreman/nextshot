@@ -182,16 +182,10 @@ parse_opts() {
                 echo "NextShot v${_VERSION}" && exit 0 ;;
             -a|--area)
                 mode="selection"; shift ;;
-            -w|--window)
-                mode="window"; shift ;;
             -f|--fullscreen)
                 mode="fullscreen"; shift ;;
-            -p|--paste)
-                if ! check_clipboard; then
-                    echo "Clipboard does not contain an image, aborting."
-                    exit 1
-                fi
-                mode="clipboard"; shift ;;
+            -w|--window)
+                mode="window"; shift ;;
             --file)
                 local mimetype
 
@@ -206,6 +200,12 @@ parse_opts() {
                     exit 1
                 fi
                 shift 2 ;;
+            -p|--paste)
+                if ! check_clipboard; then
+                    echo "Clipboard does not contain an image, aborting."
+                    exit 1
+                fi
+                mode="clipboard"; shift ;;
             -c|--clipboard)
                 output_mode="clipboard"; shift ;;
             --)
