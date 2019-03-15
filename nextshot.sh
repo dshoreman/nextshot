@@ -458,8 +458,7 @@ select_window() {
     if is_interactive; then
         select_window_cli
     elif has yad; then
-        choice=$(select_window_gui)
-        choice=${choice//|}
+        select_window_gui
     else
         echo "Unable to display window selection. Install Yad or run 'nextshot -w' in a terminal." >&2
         exit 1
@@ -484,8 +483,10 @@ select_window_cli() {
 }
 
 select_window_gui() {
-    yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
-        --column="Window Title" --column="Dimensions" "${yadlist[@]}"
+    choice=$(yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
+        --column="Window Title" --column="Dimensions" "${yadlist[@]}") || \
+        (echo "Window selection cancelled by user." >&2; exit 1)
+    choice=${choice//|}
 }
 
 send_notification() {
