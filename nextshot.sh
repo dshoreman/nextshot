@@ -457,9 +457,12 @@ select_window() {
 
     if is_interactive; then
         select_window_cli
-    else
+    elif has yad; then
         choice=$(select_window_gui)
         choice=${choice//|}
+    else
+        echo "Unable to display window selection. Install Yad or run 'nextshot -w' in a terminal." >&2
+        exit 1
     fi
 
     echo "Selected window $choice: ${titles[$choice]}" >&2
