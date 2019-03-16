@@ -12,13 +12,12 @@ added for taking screenshots of a single screen in a multi-monitor environment.
 
 ## Installation
 
-Clone the repo, copy the script somewhere in your `$PATH`, and make it executable.
+To install Nextshot, clone this repo and run `make install` as below:
 
-Alternatively, you can download the raw script directly:
-
-```
-sudo curl -o /usr/local/bin/nextshot https://raw.githubusercontent.com/dshoreman/nextshot/master/nextshot.sh
-sudo chmod +x /usr/local/bin/nextshot
+```sh
+git clone -b master https://github.com/dshoreman/nextshot.git
+cd nextshot
+sudo make install
 ```
 
 ### Dependencies
