@@ -238,10 +238,6 @@ parse_opts() {
     echo "Output will be sent to ${output_mode^}"
 }
 
-filter_key() {
-    grep -Po "\"$1\": *\"\K[^\"]*"
-}
-
 has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
@@ -266,7 +262,7 @@ int2hex() {
 make_url() {
     local json; read -r json
 
-    echo "$server/s/$(echo "$json" | filter_key "token")"
+    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')"
 }
 
 status_check() {
