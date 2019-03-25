@@ -1,6 +1,8 @@
 # Nextshot
 
-[![Nextshot Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=master)](https://travis-ci.com/dshoreman/nextshot)
+[![GitHub release](https://img.shields.io/github/tag/dshoreman/nextshot.svg?label=release)](https://github.com/dshoreman/nextshot/releases)
+[![AUR version](https://img.shields.io/aur/version/nextshot.svg)](https://aur.archlinux.org/packages/nextshot)
+[![Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=master)](https://travis-ci.com/dshoreman/nextshot)
 
 Nextshot is a simple utility for taking and sharing screenshots on Linux.
 
