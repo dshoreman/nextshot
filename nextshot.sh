@@ -1,4 +1,21 @@
 #!/usr/bin/env bash
+#
+# Nextshot - A simple screenshot utility for Linux
+# Copyright (C) 2019  Dave Shoreman <aur+nextshot at dsdev dot io>
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along
+# with this program; if not, write to the Free Software Foundation, Inc.,
+# 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 set -Eeo pipefail
 
@@ -10,7 +27,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="0.8.2"
+readonly _VERSION="1.0.0"
 
 usage() {
     echo "Usage:"
@@ -221,10 +238,6 @@ parse_opts() {
     echo "Output will be sent to ${output_mode^}"
 }
 
-filter_key() {
-    grep -Po "\"$1\": *\"\K[^\"]*"
-}
-
 has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
@@ -249,7 +262,7 @@ int2hex() {
 make_url() {
     local json; read -r json
 
-    echo "$server/s/$(echo "$json" | filter_key "token")"
+    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')"
 }
 
 status_check() {
