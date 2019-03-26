@@ -215,7 +215,7 @@ Note that this folder is not created automatically, so it must exist in Nextclou
 
 ---
 
-#### `rename` - optional, defaults to `false`
+#### `rename` - optional
 
 When you have Yad and set this option to `true`, this option will prompt you to enter a custom filename
 before uploading to Nextcloud. Be sure to include the extension as it will not be added automatically.
@@ -224,7 +224,7 @@ Defaults to `false`.
 
 ---
 
-#### `hlColour` - optional, defaults to `255,100,180`
+#### `hlColour` - optional
 
 Set this to customise the highlight colour when selecting an area or window to screenshot.
 
