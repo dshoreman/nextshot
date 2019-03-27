@@ -240,6 +240,10 @@ parse_opts() {
     echo "Output will be sent to ${output_mode^}"
 }
 
+delay_capture() {
+    [ "$delay" -gt 0 ] && sleep "$delay"
+}
+
 has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
@@ -419,6 +423,7 @@ shoot_wayland() {
         args=(-g "$(select_window)")
     fi
 
+    delay_capture
     grim "${args[@]}" "$1"
 }
 
@@ -435,8 +440,7 @@ shoot_x() {
         args=(-window "$($slop -f "%i" -t 999999)")
     fi
 
-    [ "$delay" -gt 0 ] && sleep "$delay"
-
+    delay_capture
     import "${args[@]}" "$1"
 }
 
