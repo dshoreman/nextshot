@@ -358,6 +358,7 @@ load_config() {
 
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
+    link_previews=${link_previews,,}
     rename=${rename:-false}
     rename=${rename,,}
 
