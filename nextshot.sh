@@ -411,16 +411,15 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
-    elif [ "$mode" = "window" ]; then
-        local geometry
+    local args
 
-        geometry="$(select_window)"
-        grim -g "$geometry" "$1"
-    else
-        grim "$1"
+    if [ "$mode" = "selection" ]; then
+        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+    elif [ "$mode" = "window" ]; then
+        args=(-g "$(select_window)")
     fi
+
+    grim "${args[@]}" "$1"
 }
 
 shoot_x() {
