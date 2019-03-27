@@ -580,7 +580,9 @@ and click <b>Create new app password</b>.\n:LBL" \
 
     IFS='|' read -r server _ username password _ link_previews rename savedir _ <<< "$response"
     link_previews=${link_previews//\'/}
+    link_previews=${link_previews,,}
     rename=${rename//\'/}
+    rename=${rename,,}
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
