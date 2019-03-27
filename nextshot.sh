@@ -205,7 +205,7 @@ parse_opts() {
             -w|--window)
                 mode="window"; shift ;;
             -d|--delay)
-                delay=${2//=}; shift ;;
+                delay=${2//=}; shift 2 ;;
             --file)
                 local mimetype
 
@@ -242,7 +242,7 @@ parse_opts() {
 }
 
 delay_capture() {
-    [ "$delay" -gt 0 ] && sleep "$delay"
+    [ "$delay" -gt 0 ] && echo "Waiting for ${delay} seconds..." >&2 && sleep "$delay"
 }
 
 has() {
