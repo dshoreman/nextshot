@@ -157,8 +157,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawfpc
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htVawd:fpc
+    local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
@@ -203,6 +203,8 @@ parse_opts() {
                 mode="fullscreen"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
+            -d|--delay)
+                delay=${2//=}; shift ;;
             --file)
                 local mimetype
 
@@ -433,6 +435,8 @@ shoot_x() {
     elif [ "$mode" = "window" ]; then
         args=(-window "$($slop -f "%i" -t 999999)")
     fi
+
+    [ "$delay" -gt 0 ] && sleep "$delay"
 
     import "${args[@]}" "$1"
 }
