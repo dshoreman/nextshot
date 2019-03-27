@@ -571,18 +571,20 @@ Fill out the options below and you'll be taking screenshots in no time:\n" \
         --field="To generate an App Password, open your Nextcloud instance.
 Under <b>Settings > Personal > Security</b>, enter <i>\"NextShot\"</i> for the App name
 and click <b>Create new app password</b>.\n:LBL" \
+        --field="Link direct to image instead of Nextcloud UI (appends '/preview'):CHK" \
         --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" true "Screenshots") || config_abort
+        "https://" "" "" "" "" false true "Screenshots") || config_abort
 
-    IFS='|' read -r server _ username password _ rename savedir _ <<< "$response"
+    IFS='|' read -r server _ username password _ link_previews rename savedir _ <<< "$response"
+    link_previews=${link_previews//\'/}
     rename=${rename//\'/}
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
         --button="gtk-cancel:1" --button="gtk-save:0" --width=400 --height=175 --form --field=":TXT" \
-        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename") || config_abort
+        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
 }
@@ -620,6 +622,9 @@ password=''
 
 # Folder on Nextcloud where screenshots will be uploaded (must already exist)
 savedir=''
+
+# When set to true, appends /preview to share links, going straight to the full-size image
+link_previews=false
 
 # Whether to prompt for a filename before uploading to Nextcloud
 rename=false
