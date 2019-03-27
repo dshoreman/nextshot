@@ -215,6 +215,15 @@ Note that this folder is not created automatically, so it must exist in Nextclou
 
 ---
 
+#### `link_previews` - optional
+
+When set to `true`, Nextshot will append `/preview` to generated share links. With this option enabled,
+clicking the link will take you directly to the full-size image rather than Nextcloud's default share UI.
+
+Defaults to `false`
+
+---
+
 #### `rename` - optional
 
 When you have Yad and set this option to `true`, this option will prompt you to enter a custom filename
