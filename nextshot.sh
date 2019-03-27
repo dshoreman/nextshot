@@ -47,6 +47,7 @@ usage() {
     echo "  -a, --area        Capture only the selected area"
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
+    echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
     echo
     echo "Upload Modes:"
     echo
