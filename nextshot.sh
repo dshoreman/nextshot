@@ -260,9 +260,13 @@ int2hex() {
 }
 
 make_url() {
-    local json; read -r json
+    local json suffix; read -r json
 
-    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')"
+    if $link_previews; then
+        suffix=/preview
+    fi
+
+    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
 }
 
 status_check() {
@@ -353,6 +357,7 @@ load_config() {
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
 
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
+    link_previews=${link_previews:-false}
     rename=${rename:-false}
     rename=${rename,,}
 
