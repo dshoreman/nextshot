@@ -162,7 +162,7 @@ parse_opts() {
     local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
-    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
+    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
         exit 2
@@ -237,6 +237,7 @@ parse_opts() {
         esac
     done
 
+    : ${mode:=selection}
     echo "Screenshot mode set to $mode"
     echo "Output will be sent to ${output_mode^}"
 }
