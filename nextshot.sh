@@ -47,6 +47,7 @@ usage() {
     echo "  -a, --area        Capture only the selected area"
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
+    echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
     echo
     echo "Upload Modes:"
     echo
@@ -157,11 +158,11 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawfpc
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htVawd:fpc
+    local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
-    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
+    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
         exit 2
@@ -203,6 +204,8 @@ parse_opts() {
                 mode="fullscreen"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
+            -d|--delay)
+                delay=${2//=}; shift 2 ;;
             --file)
                 local mimetype
 
@@ -234,8 +237,13 @@ parse_opts() {
         esac
     done
 
+    : ${mode:=selection}
     echo "Screenshot mode set to $mode"
     echo "Output will be sent to ${output_mode^}"
+}
+
+delay_capture() {
+    [ "$delay" -gt 0 ] && echo "Waiting for ${delay} seconds..." >&2 && sleep "$delay"
 }
 
 has() {
@@ -409,16 +417,16 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
-    elif [ "$mode" = "window" ]; then
-        local geometry
+    local args
 
-        geometry="$(select_window)"
-        grim -g "$geometry" "$1"
-    else
-        grim "$1"
+    if [ "$mode" = "selection" ]; then
+        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+    elif [ "$mode" = "window" ]; then
+        args=(-g "$(select_window)")
     fi
+
+    delay_capture
+    grim "${args[@]}" "$1"
 }
 
 shoot_x() {
@@ -434,6 +442,7 @@ shoot_x() {
         args=(-window "$($slop -f "%i" -t 999999)")
     fi
 
+    delay_capture
     import "${args[@]}" "$1"
 }
 
