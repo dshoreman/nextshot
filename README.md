@@ -97,6 +97,9 @@ bypass Nextcloud and instead copy the image to clipboard, add the `-c` or `--cli
 
     `nextshot -f` or `nextshot --fullscreen`
 
+Image capture can also be delayed by passing the `-d`, `--delay` option followed by a `TIMEOUT`, for
+example `nextshot -d3.5` or `nextshot --delay 2m` to delay 3.5 seconds or 2 minutes respectively.
+
 To abort selection in the `--area` or `--window` modes, press the Escape key.
 
 ### Upload Modes
@@ -215,7 +218,16 @@ Note that this folder is not created automatically, so it must exist in Nextclou
 
 ---
 
-#### `rename` - optional, defaults to `false`
+#### `link_previews` - optional
+
+When set to `true`, Nextshot will append `/preview` to generated share links. With this option enabled,
+clicking the link will take you directly to the full-size image rather than Nextcloud's default share UI.
+
+Defaults to `false`
+
+---
+
+#### `rename` - optional
 
 When you have Yad and set this option to `true`, this option will prompt you to enter a custom filename
 before uploading to Nextcloud. Be sure to include the extension as it will not be added automatically.
@@ -224,7 +236,7 @@ Defaults to `false`.
 
 ---
 
-#### `hlColour` - optional, defaults to `255,100,180`
+#### `hlColour` - optional
 
 Set this to customise the highlight colour when selecting an area or window to screenshot.
 

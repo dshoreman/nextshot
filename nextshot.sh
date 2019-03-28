@@ -27,7 +27,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.0.0"
+readonly _VERSION="1.1.0"
 
 usage() {
     echo "Usage:"
@@ -47,6 +47,7 @@ usage() {
     echo "  -a, --area        Capture only the selected area"
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
+    echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
     echo
     echo "Upload Modes:"
     echo
@@ -157,11 +158,11 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawfpc
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htVawd:fpc
+    local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
-    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "${@:---area}")
+    ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
         exit 2
@@ -203,6 +204,8 @@ parse_opts() {
                 mode="fullscreen"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
+            -d|--delay)
+                delay=${2//=}; shift 2 ;;
             --file)
                 local mimetype
 
@@ -234,8 +237,13 @@ parse_opts() {
         esac
     done
 
+    : ${mode:=selection}
     echo "Screenshot mode set to $mode"
     echo "Output will be sent to ${output_mode^}"
+}
+
+delay_capture() {
+    [ "$delay" -gt 0 ] && echo "Waiting for ${delay} seconds..." >&2 && sleep "$delay"
 }
 
 has() {
@@ -260,9 +268,13 @@ int2hex() {
 }
 
 make_url() {
-    local json; read -r json
+    local json suffix; read -r json
 
-    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')"
+    if $link_previews; then
+        suffix=/preview
+    fi
+
+    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
 }
 
 status_check() {
@@ -353,6 +365,8 @@ load_config() {
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
 
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
+    link_previews=${link_previews:-false}
+    link_previews=${link_previews,,}
     rename=${rename:-false}
     rename=${rename,,}
 
@@ -403,16 +417,16 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    if [ "$mode" = "selection" ]; then
-        grim -g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")" "$1"
-    elif [ "$mode" = "window" ]; then
-        local geometry
+    local args
 
-        geometry="$(select_window)"
-        grim -g "$geometry" "$1"
-    else
-        grim "$1"
+    if [ "$mode" = "selection" ]; then
+        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+    elif [ "$mode" = "window" ]; then
+        args=(-g "$(select_window)")
     fi
+
+    delay_capture
+    grim "${args[@]}" "$1"
 }
 
 shoot_x() {
@@ -428,6 +442,7 @@ shoot_x() {
         args=(-window "$($slop -f "%i" -t 999999)")
     fi
 
+    delay_capture
     import "${args[@]}" "$1"
 }
 
@@ -566,18 +581,22 @@ Fill out the options below and you'll be taking screenshots in no time:\n" \
         --field="To generate an App Password, open your Nextcloud instance.
 Under <b>Settings > Personal > Security</b>, enter <i>\"NextShot\"</i> for the App name
 and click <b>Create new app password</b>.\n:LBL" \
+        --field="Link direct to image instead of Nextcloud UI (appends '/preview'):CHK" \
         --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" true "Screenshots") || config_abort
+        "https://" "" "" "" "" false true "Screenshots") || config_abort
 
-    IFS='|' read -r server _ username password _ rename savedir _ <<< "$response"
+    IFS='|' read -r server _ username password _ link_previews rename savedir _ <<< "$response"
+    link_previews=${link_previews//\'/}
+    link_previews=${link_previews,,}
     rename=${rename//\'/}
+    rename=${rename,,}
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
         --button="gtk-cancel:1" --button="gtk-save:0" --width=400 --height=175 --form --field=":TXT" \
-        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nrename=$rename") || config_abort
+        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
 }
@@ -615,6 +634,9 @@ password=''
 
 # Folder on Nextcloud where screenshots will be uploaded (must already exist)
 savedir=''
+
+# When set to true, appends /preview to share links, going straight to the full-size image
+link_previews=false
 
 # Whether to prompt for a filename before uploading to Nextcloud
 rename=false
