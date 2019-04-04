@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.1.1] - 2019-04-04
+### Fixed
+* Issue where not setting delay would break screenshots
+
+
 ## [1.1.0] - 2019-03-28
 ### Added
 * Support for pausing between selection and capture with new `--delay` CLI option

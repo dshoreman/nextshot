@@ -243,7 +243,10 @@ parse_opts() {
 }
 
 delay_capture() {
-    [ "$delay" -gt 0 ] && echo "Waiting for ${delay} seconds..." >&2 && sleep "$delay"
+    if [ "$delay" -gt 0 ]; then
+        echo "Waiting for ${delay} seconds..." >&2
+        sleep "$delay"
+    fi
 }
 
 has() {
@@ -369,6 +372,7 @@ load_config() {
     link_previews=${link_previews,,}
     rename=${rename:-false}
     rename=${rename,,}
+    delay=${delay:-0}
 
     echo "Config loaded!"
 }
