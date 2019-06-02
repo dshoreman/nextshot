@@ -229,8 +229,9 @@ Defaults to `false`
 
 #### `rename` - optional
 
-When you have Yad and set this option to `true`, this option will prompt you to enter a custom filename
-before uploading to Nextcloud. Be sure to include the extension as it will not be added automatically.
+When you set this option to `true`, Nextshot will prompt you to enter a custom filename before
+uploading to Nextcloud. Be sure to include the extension as it will not be added automatically.
+Triggering Nextshot from the [#tray-menu](tray menu) or a [#recommended-shortcuts](keybinding) will require Yad for the rename prompt.
 
 Defaults to `false`.
 

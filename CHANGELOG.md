@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* CLI prompt for renaming screenshots when running interactively
+
 ### Fixed
 * Quit item in tray menu didn't actually quit
 
