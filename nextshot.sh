@@ -453,17 +453,19 @@ shoot_x() {
 attempt_rename() {
     local newname
 
-    if [ ! "$rename" = true ] || ! has yad; then echo "$1"
-    else
-        newname=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
-            --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
+    if [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
+    else newname="$1"; fi
 
-        if [ ! "$1" = "$newname" ]; then
-            mv "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname"
-        fi
-
-        echo "$newname"
+    if [ ! "$1" = "$newname" ]; then
+        mv "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname"
     fi
+
+    echo "$newname"
+}
+
+rename_gui() {
+    yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
+        --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null
 }
 
 nc_upload() {
