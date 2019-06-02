@@ -160,7 +160,7 @@ setup() {
 
 parse_opts() {
     local -r OPTS=D::htVawd:fpc
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r LONG=deps::,dependencies::,env:,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -187,6 +187,20 @@ parse_opts() {
                         is_wayland && chk="w" || chk="x" ;;
                 esac
                 status_check "$chk" && exit 0 ;;
+            --env)
+                NC_ENV=${2//=}
+                case "${NC_ENV,,}" in
+                    w|wl|way|wayland)
+                        NC_ENV=wayland ;;
+                    x|x11)
+                        NC_ENV=x11 ;;
+                    auto)
+                        ;;
+                    *)
+                        echo "Invalid environment. Valid options include 'auto', 'wayland' or 'x11'."
+                        exit 1 ;;
+                esac
+                shift 2 ;;
             -h|--help)
                 usage && exit 0 ;;
             -t|--tray)
@@ -241,6 +255,12 @@ parse_opts() {
     : ${mode:=selection}
     echo "Screenshot mode set to $mode"
     echo "Output will be sent to ${output_mode^}"
+
+    [ -n "${NC_ENV+x}" ] || autoset_environment
+}
+
+autoset_environment() {
+    NC_ENV="$(is_wayland_detected && echo "wayland" || echo "x11")"
 }
 
 delay_capture() {
@@ -260,6 +280,10 @@ is_interactive() {
 }
 
 is_wayland() {
+    [ "$NC_ENV" = "wayland" ]
+}
+
+is_wayland_detected() {
     [ -n "${WAYLAND_DISPLAY+x}" ]
 }
 
