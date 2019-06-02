@@ -173,6 +173,7 @@ parse_opts() {
     while true; do
         case "$1" in
             -D|--deps|--dependencies)
+                [ -n "${NC_ENV+x}" ] || autoset_environment
                 local chk=${2//=}
                 case "${chk,,}" in
                     a|all)
@@ -325,7 +326,8 @@ status_check() {
     echo
     echo "Current version: Nextshot v${_VERSION}"
     echo -n "Detected environment: "
-    is_wayland && echo "Wayland" || echo "X11"
+    is_wayland_detected && echo "Wayland" || echo "X11"
+    echo "Active environment: ${NC_ENV^}"
     echo
 
     echo "Global dependencies"; check_deps "${reqG[@]}"; echo
