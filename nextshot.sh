@@ -453,7 +453,8 @@ shoot_x() {
 attempt_rename() {
     local newname
 
-    if [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
+    if [ "$rename" = true ] && is_interactive; then newname="$(rename_cli "$1")"
+    elif [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
     else newname="$1"; fi
 
     if [ ! "$1" = "$newname" ]; then
@@ -461,6 +462,11 @@ attempt_rename() {
     fi
 
     echo "$newname"
+}
+
+rename_cli() {
+    read -rp "Screenshot saved!\nEnter filename [$1]: " newname
+    echo "${newname:-$1}"
 }
 
 rename_gui() {
