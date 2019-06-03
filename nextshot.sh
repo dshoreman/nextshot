@@ -83,6 +83,7 @@ nextshot() {
 
     sanity_check && setup
     parse_opts "$@"
+    parse_environment
     load_config
 
     image=$(cache_image)
@@ -173,7 +174,7 @@ parse_opts() {
     while true; do
         case "$1" in
             -D|--deps|--dependencies)
-                [ -n "${NC_ENV+x}" ] || autoset_environment
+                parse_environment
                 local chk=${2//=}
                 case "${chk,,}" in
                     a|all)
@@ -189,18 +190,7 @@ parse_opts() {
                 esac
                 status_check "$chk" && exit 0 ;;
             --env)
-                NC_ENV=${2//=}
-                case "${NC_ENV,,}" in
-                    w|wl|way|wayland)
-                        NC_ENV=wayland ;;
-                    x|x11)
-                        NC_ENV=x11 ;;
-                    auto)
-                        ;;
-                    *)
-                        echo "Invalid environment. Valid options include 'auto', 'wayland' or 'x11'."
-                        exit 1 ;;
-                esac
+                NEXTSHOT_ENV=${2//=}
                 shift 2 ;;
             -h|--help)
                 usage && exit 0 ;;
@@ -256,12 +246,20 @@ parse_opts() {
     : ${mode:=selection}
     echo "Screenshot mode set to $mode"
     echo "Output will be sent to ${output_mode^}"
-
-    [ -n "${NC_ENV+x}" ] || autoset_environment
 }
 
-autoset_environment() {
-    NC_ENV="$(is_wayland_detected && echo "wayland" || echo "x11")"
+parse_environment() {
+    case "${NEXTSHOT_ENV,,}" in
+        w|wl|way|wayland)
+            NEXTSHOT_ENV=wayland ;;
+        x|x11)
+            NEXTSHOT_ENV=x11 ;;
+        auto|"")
+            NEXTSHOT_ENV="$(is_wayland_detected && echo "wayland" || echo "x11")" ;;
+        *)
+            echo "Invalid environment '${NEXTSHOT_ENV}'. Valid options include 'auto', 'wayland' or 'x11'."
+            exit 1 ;;
+    esac
 }
 
 delay_capture() {
@@ -281,7 +279,7 @@ is_interactive() {
 }
 
 is_wayland() {
-    [ "$NC_ENV" = "wayland" ]
+    [ "$NEXTSHOT_ENV" = "wayland" ]
 }
 
 is_wayland_detected() {
@@ -327,7 +325,7 @@ status_check() {
     echo "Current version: Nextshot v${_VERSION}"
     echo -n "Detected environment: "
     is_wayland_detected && echo "Wayland" || echo "X11"
-    echo "Active environment: ${NC_ENV^}"
+    echo "Active environment: ${NEXTSHOT_ENV^}"
     echo
 
     echo "Global dependencies"; check_deps "${reqG[@]}"; echo
