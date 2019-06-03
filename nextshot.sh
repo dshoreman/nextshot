@@ -35,6 +35,7 @@ usage() {
     echo
     echo "General Options:"
     echo "  -D, --deps[=TYPE] List dependency statuses and exit"
+    echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
     echo "  -V, --version     Output version information and exit"
@@ -74,6 +75,11 @@ usage() {
     echo "dependencies. When omitted, dependencies are listed based on"
     echo "the currently active environment as detected by Nextshot."
     echo "Note that TYPE is case-insensitive. -DA is the same as -Da."
+    echo; echo
+    echo "The --env flag affects the tools used to take screenshots."
+    echo "ENV can be one of 'w', 'wl' or 'wayland' to force Wayland"
+    echo "mode; 'x' or 'x11' to force X11; 'auto' or left blank to"
+    echo "use the builtin automatic environment detection."
     echo
 }
 
