@@ -35,6 +35,7 @@ usage() {
     echo
     echo "General Options:"
     echo "  -D, --deps[=TYPE] List dependency statuses and exit"
+    echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
     echo "  -V, --version     Output version information and exit"
@@ -74,6 +75,11 @@ usage() {
     echo "dependencies. When omitted, dependencies are listed based on"
     echo "the currently active environment as detected by Nextshot."
     echo "Note that TYPE is case-insensitive. -DA is the same as -Da."
+    echo; echo
+    echo "The --env flag affects the tools used to take screenshots."
+    echo "ENV can be one of 'w', 'wl' or 'wayland' to force Wayland"
+    echo "mode; 'x' or 'x11' to force X11; 'auto' or left blank to"
+    echo "use the builtin automatic environment detection."
     echo
 }
 
@@ -83,6 +89,7 @@ nextshot() {
 
     sanity_check && setup
     parse_opts "$@"
+    parse_environment
     load_config
 
     image=$(cache_image)
@@ -160,7 +167,7 @@ setup() {
 
 parse_opts() {
     local -r OPTS=D::htVawd:fpc
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r LONG=deps::,dependencies::,env:,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -173,6 +180,7 @@ parse_opts() {
     while true; do
         case "$1" in
             -D|--deps|--dependencies)
+                parse_environment
                 local chk=${2//=}
                 case "${chk,,}" in
                     a|all)
@@ -187,6 +195,9 @@ parse_opts() {
                         is_wayland && chk="w" || chk="x" ;;
                 esac
                 status_check "$chk" && exit 0 ;;
+            --env)
+                NEXTSHOT_ENV=${2//=}
+                shift 2 ;;
             -h|--help)
                 usage && exit 0 ;;
             -t|--tray)
@@ -243,6 +254,20 @@ parse_opts() {
     echo "Output will be sent to ${output_mode^}"
 }
 
+parse_environment() {
+    case "${NEXTSHOT_ENV,,}" in
+        w|wl|way|wayland)
+            NEXTSHOT_ENV=wayland ;;
+        x|x11)
+            NEXTSHOT_ENV=x11 ;;
+        auto|"")
+            NEXTSHOT_ENV="$(is_wayland_detected && echo "wayland" || echo "x11")" ;;
+        *)
+            echo "Invalid environment '${NEXTSHOT_ENV}'. Valid options include 'auto', 'wayland' or 'x11'."
+            exit 1 ;;
+    esac
+}
+
 delay_capture() {
     if [ "$delay" -gt 0 ]; then
         echo "Waiting for ${delay} seconds..." >&2
@@ -260,6 +285,10 @@ is_interactive() {
 }
 
 is_wayland() {
+    [ "$NEXTSHOT_ENV" = "wayland" ]
+}
+
+is_wayland_detected() {
     [ -n "${WAYLAND_DISPLAY+x}" ]
 }
 
@@ -301,7 +330,8 @@ status_check() {
     echo
     echo "Current version: Nextshot v${_VERSION}"
     echo -n "Detected environment: "
-    is_wayland && echo "Wayland" || echo "X11"
+    is_wayland_detected && echo "Wayland" || echo "X11"
+    echo "Active environment: ${NEXTSHOT_ENV^}"
     echo
 
     echo "Global dependencies"; check_deps "${reqG[@]}"; echo
