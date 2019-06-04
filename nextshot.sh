@@ -38,6 +38,7 @@ usage() {
     echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
+    echo "  -v, --verbose     Enable verbose output for debugging"
     echo "  -V, --version     Output version information and exit"
     echo
     echo "Screenshot Modes:"
@@ -84,7 +85,7 @@ usage() {
 }
 
 nextshot() {
-    local image filename json url
+    local debug=false image filename json url
     output_mode="nextcloud"
 
     sanity_check && setup
@@ -166,8 +167,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawd:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVawd:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -208,6 +209,8 @@ parse_opts() {
                 fi
 
                 tray_menu && exit 0 ;;
+            -v|--verbose)
+                debug=true; echo "Debug mode enabled"; shift ;;
             -V|--version)
                 echo "NextShot v${_VERSION}" && exit 0 ;;
             -a|--area)
@@ -506,14 +509,17 @@ rename_gui() {
 }
 
 nc_upload() {
-    local filename; read -r filename
+    local filename output; read -r filename
 
     echo "Uploading screenshot..." >&2
 
+    [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o /dev/null -w "%{http_code}")
+        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o $output -w "%{http_code}")
 
     if [ "$respCode" -ne 201 ]; then
+        echo >&2
+        [ $debug = true ] && cat "$_CACHE_DIR/curlout" >&2
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 

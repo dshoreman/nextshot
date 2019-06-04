@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Ability to force environment with `NEXTSHOT_ENV` var or `--env` flag
+* Debug mode for detailed output, enabled with `-v, --verbose`
 
 ### Changed
 * Filename prompt now uses CLI instead of Yad when running interactively
