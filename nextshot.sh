@@ -509,7 +509,7 @@ rename_gui() {
 }
 
 nc_upload() {
-    local filename output; read -r filename
+    local filename output respCode; read -r filename
 
     echo "Uploading screenshot..." >&2
 
@@ -527,9 +527,21 @@ nc_upload() {
 }
 
 nc_share() {
-    curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
+    local json respCode
+    [ $debug = true ] && echo -n "Applying share settings... " >&2
+
+    respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
-        -F "path=/$savedir/$1" -F "shareType=3"
+        -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
+
+    json="$(<"$_CACHE_DIR/share.json")"
+    [ $debug = true ] && echo -e "Nextcloud returned the following response:\n${json}\n" >&2
+
+    if [ "$respCode" -ne 200 ]; then
+        echo "Sharing failed. Expected 200 but server returned a $respCode response" >&2 && exit 1
+    fi
+
+    echo "$json"
 }
 
 select_window() {
