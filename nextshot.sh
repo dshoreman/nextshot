@@ -253,27 +253,34 @@ parse_opts() {
     done
 
     : ${mode:=selection}
-    echo "Screenshot mode set to $mode"
-    echo "Output will be sent to ${output_mode^}"
+    if [ $debug = true ]; then
+        echo "Screenshot mode set to $mode"
+        echo "Output will be sent to ${output_mode^}"
+    fi
 }
 
 parse_environment() {
+    local method="manually"
     case "${NEXTSHOT_ENV,,}" in
         w|wl|way|wayland)
             NEXTSHOT_ENV=wayland ;;
         x|x11)
             NEXTSHOT_ENV=x11 ;;
         auto|"")
+            method="automatically"
             NEXTSHOT_ENV="$(is_wayland_detected && echo "wayland" || echo "x11")" ;;
         *)
             echo "Invalid environment '${NEXTSHOT_ENV}'. Valid options include 'auto', 'wayland' or 'x11'."
             exit 1 ;;
     esac
+    if [ $debug = true ]; then
+        echo "Environment $method set to ${NEXTSHOT_ENV}"
+    fi
 }
 
 delay_capture() {
     if [ "$delay" -gt 0 ]; then
-        echo "Waiting for ${delay} seconds..." >&2
+        echo "Pausing for ${delay} seconds..." >&2
         sleep "$delay"
     fi
 }
@@ -395,8 +402,9 @@ to_clipboard() {
 }
 
 load_config() {
+    [ $debug = true ] && echo "Loading config from $_CONFIG_FILE..."
     # shellcheck disable=SC1090
-    echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE"
+    . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
@@ -408,7 +416,9 @@ load_config() {
     rename=${rename,,}
     delay=${delay:-0}
 
-    echo "Config loaded!"
+    if [ $debug = true ]; then
+        echo "Config loaded!"
+    fi
 }
 
 parse_colour() {
@@ -428,27 +438,29 @@ parse_colour() {
 
 cache_image() {
     if [ "$mode" = "file" ]; then
-        local filename
+        local cmd filename
         filename="$(basename "$file")"
 
-        cp "$file" "$_CACHE_DIR/$filename" && echo "$filename"
+        [ $debug = true ] && cmd="cp -v" || cmd="cp"
+        $cmd "$file" "$_CACHE_DIR/$filename" >&2 && echo "$filename"
     else
         take_screenshot
     fi
 }
 
 take_screenshot() {
-    local filename filepath
+    local filename filepath shoot
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
     filepath="$_CACHE_DIR/$filename"
 
     if [ "$mode" = "clipboard" ]; then
         from_clipboard > "$filepath"
-    elif is_wayland; then
-        shoot_wayland "$filepath"
     else
-        shoot_x "$filepath"
+        is_wayland && shoot="shoot_wayland" || shoot="shoot_x"
+
+        echo "Waiting for selection..." >&2
+        $shoot "$filepath"
     fi
 
     attempt_rename "$filename"
@@ -485,14 +497,15 @@ shoot_x() {
 }
 
 attempt_rename() {
-    local newname
+    local cmd newname
 
     if [ "$rename" = true ] && is_interactive; then newname="$(rename_cli "$1")"
     elif [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
     else newname="$1"; fi
 
     if [ ! "$1" = "$newname" ]; then
-        mv "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname"
+        [ $debug = true ] && cmd="mv -v" || cmd="mv"
+        $cmd "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname" >&2
     fi
 
     echo "$newname"
@@ -511,7 +524,7 @@ rename_gui() {
 nc_upload() {
     local filename output respCode; read -r filename
 
-    echo "Uploading screenshot..." >&2
+    echo -e "\nUploading screenshot..." >&2
 
     [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
@@ -528,14 +541,14 @@ nc_upload() {
 
 nc_share() {
     local json respCode
-    [ $debug = true ] && echo -n "Applying share settings... " >&2
+    [ $debug = true ] && echo -e "\nApplying share settings..." >&2
 
     respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
         -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
 
     json="$(<"$_CACHE_DIR/share.json")"
-    [ $debug = true ] && echo -e "Nextcloud returned the following response:\n${json}\n" >&2
+    [ $debug = true ] && echo -e "Nextcloud response:\n${json}\n" >&2
 
     if [ "$respCode" -ne 200 ]; then
         echo "Sharing failed. Expected 200 but server returned a $respCode response" >&2 && exit 1
