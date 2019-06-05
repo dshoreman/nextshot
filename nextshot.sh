@@ -512,7 +512,8 @@ attempt_rename() {
 }
 
 rename_cli() {
-    read -rp "Screenshot saved!\nEnter filename [$1]: " newname
+    echo "Screenshot saved!" >&2
+    read -rp "Enter filename [$1]: " newname
     echo "${newname:-$1}"
 }
 
