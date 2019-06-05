@@ -34,6 +34,7 @@ compatibility with compositors other than Sway.
 * [Configuration](#configuration)
   * [Example nextshot.conf](#example-nextshotconf)
   * [Available Options](#available-options)
+* [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
 
 ## Installation
@@ -229,8 +230,9 @@ Defaults to `false`
 
 #### `rename` - optional
 
-When you have Yad and set this option to `true`, this option will prompt you to enter a custom filename
-before uploading to Nextcloud. Be sure to include the extension as it will not be added automatically.
+When you set this option to `true`, Nextshot will prompt you to enter a custom filename before
+uploading to Nextcloud. Be sure to include the extension as it will not be added automatically.
+Triggering Nextshot from the [#tray-menu](tray menu) or a [#recommended-shortcuts](keybinding) will require Yad for the rename prompt.
 
 Defaults to `false`.
 
@@ -244,6 +246,33 @@ It should be specified as comma-separated RGB so that Nextshot can parse the ind
 values and pass them along to either Slop or Slurp, depending on whether you use X11 or Wayland.
 
 Defaults to `255,100,180`.
+
+## Troubleshooting
+
+#### Nextshot is detecting the wrong environment
+
+In some cases it may be that Nextshot's environment detection doesn't quite work as expected. One
+example of this might be if your system has both X11 *and* Wayland. If you were to start a tmux
+session under X11 then switch to Wayland and run Nextshot from within tmux, it will think you're
+running under the X11 environment when that's not really the case.
+
+To fix this you can bypass the default detection method:
+```sh
+nextshot --env=wayland ...
+```
+
+For a more permanent fix, you can set or `export` the `NEXTSHOT_ENV` environment variable:
+```sh
+export NEXTSHOT_ENV=wayland
+nextshot ...
+
+# or
+
+NEXTSHOT_ENV=wayland nextshot ...
+```
+
+Likewise if you're running from X11 but Nextshot detects Wayland, you can set `--env` or
+`NEXTSHOT_ENV` to `x11`. For more details and possible values, see `nextshot --help`.
 
 ## Known Issues
 

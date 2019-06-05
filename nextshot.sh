@@ -27,7 +27,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.1.0"
+readonly _VERSION="1.2.0"
 
 usage() {
     echo "Usage:"
@@ -35,8 +35,10 @@ usage() {
     echo
     echo "General Options:"
     echo "  -D, --deps[=TYPE] List dependency statuses and exit"
+    echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
+    echo "  -v, --verbose     Enable verbose output for debugging"
     echo "  -V, --version     Output version information and exit"
     echo
     echo "Screenshot Modes:"
@@ -74,15 +76,21 @@ usage() {
     echo "dependencies. When omitted, dependencies are listed based on"
     echo "the currently active environment as detected by Nextshot."
     echo "Note that TYPE is case-insensitive. -DA is the same as -Da."
+    echo; echo
+    echo "The --env flag affects the tools used to take screenshots."
+    echo "ENV can be one of 'w', 'wl' or 'wayland' to force Wayland"
+    echo "mode; 'x' or 'x11' to force X11; 'auto' or left blank to"
+    echo "use the builtin automatic environment detection."
     echo
 }
 
 nextshot() {
-    local image filename json url
+    local debug=false image filename json url
     output_mode="nextcloud"
 
     sanity_check && setup
     parse_opts "$@"
+    parse_environment
     load_config
 
     image=$(cache_image)
@@ -114,7 +122,8 @@ tray_menu() {
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
 
     yad --notification --listen --no-middle --command="nextshot -a" <&3 &
-    echo $! > "$_RUNTIME_DIR/traymenu.pid"
+    local traypid=$!
+    echo $traypid > "$_RUNTIME_DIR/traymenu.pid"
 
     echo "menu:\
 Open Nextcloud      ! xdg-open $files_url !emblem-web||\
@@ -122,7 +131,7 @@ Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
-Quit Nextshot       !quit                 !gtk-quit" >&3
+Quit Nextshot       ! kill $traypid       !gtk-quit" >&3
 
     echo "icon:camera-photo-symbolic" >&3
     echo "tooltip:Nextshot" >&3
@@ -158,8 +167,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htVawd:fpc
-    local -r LONG=deps::,dependencies::,help,tray,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVawd:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -172,6 +181,7 @@ parse_opts() {
     while true; do
         case "$1" in
             -D|--deps|--dependencies)
+                parse_environment
                 local chk=${2//=}
                 case "${chk,,}" in
                     a|all)
@@ -186,6 +196,9 @@ parse_opts() {
                         is_wayland && chk="w" || chk="x" ;;
                 esac
                 status_check "$chk" && exit 0 ;;
+            --env)
+                NEXTSHOT_ENV=${2//=}
+                shift 2 ;;
             -h|--help)
                 usage && exit 0 ;;
             -t|--tray)
@@ -196,6 +209,8 @@ parse_opts() {
                 fi
 
                 tray_menu && exit 0 ;;
+            -v|--verbose)
+                debug=true; echo "Debug mode enabled"; shift ;;
             -V|--version)
                 echo "NextShot v${_VERSION}" && exit 0 ;;
             -a|--area)
@@ -238,13 +253,34 @@ parse_opts() {
     done
 
     : ${mode:=selection}
-    echo "Screenshot mode set to $mode"
-    echo "Output will be sent to ${output_mode^}"
+    if [ $debug = true ]; then
+        echo "Screenshot mode set to $mode"
+        echo "Output will be sent to ${output_mode^}"
+    fi
+}
+
+parse_environment() {
+    local method="manually"
+    case "${NEXTSHOT_ENV,,}" in
+        w|wl|way|wayland)
+            NEXTSHOT_ENV=wayland ;;
+        x|x11)
+            NEXTSHOT_ENV=x11 ;;
+        auto|"")
+            method="automatically"
+            NEXTSHOT_ENV="$(is_wayland_detected && echo "wayland" || echo "x11")" ;;
+        *)
+            echo "Invalid environment '${NEXTSHOT_ENV}'. Valid options include 'auto', 'wayland' or 'x11'."
+            exit 1 ;;
+    esac
+    if [ $debug = true ]; then
+        echo "Environment $method set to ${NEXTSHOT_ENV}"
+    fi
 }
 
 delay_capture() {
     if [ "$delay" -gt 0 ]; then
-        echo "Waiting for ${delay} seconds..." >&2
+        echo "Pausing for ${delay} seconds..." >&2
         sleep "$delay"
     fi
 }
@@ -259,6 +295,10 @@ is_interactive() {
 }
 
 is_wayland() {
+    [ "$NEXTSHOT_ENV" = "wayland" ]
+}
+
+is_wayland_detected() {
     [ -n "${WAYLAND_DISPLAY+x}" ]
 }
 
@@ -300,7 +340,8 @@ status_check() {
     echo
     echo "Current version: Nextshot v${_VERSION}"
     echo -n "Detected environment: "
-    is_wayland && echo "Wayland" || echo "X11"
+    is_wayland_detected && echo "Wayland" || echo "X11"
+    echo "Active environment: ${NEXTSHOT_ENV^}"
     echo
 
     echo "Global dependencies"; check_deps "${reqG[@]}"; echo
@@ -361,8 +402,9 @@ to_clipboard() {
 }
 
 load_config() {
+    [ $debug = true ] && echo "Loading config from $_CONFIG_FILE..."
     # shellcheck disable=SC1090
-    echo "Loading config from $_CONFIG_FILE..." && . "$_CONFIG_FILE"
+    . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
@@ -374,7 +416,9 @@ load_config() {
     rename=${rename,,}
     delay=${delay:-0}
 
-    echo "Config loaded!"
+    if [ $debug = true ]; then
+        echo "Config loaded!"
+    fi
 }
 
 parse_colour() {
@@ -394,27 +438,29 @@ parse_colour() {
 
 cache_image() {
     if [ "$mode" = "file" ]; then
-        local filename
+        local cmd filename
         filename="$(basename "$file")"
 
-        cp "$file" "$_CACHE_DIR/$filename" && echo "$filename"
+        [ $debug = true ] && cmd="cp -v" || cmd="cp"
+        $cmd "$file" "$_CACHE_DIR/$filename" >&2 && echo "$filename"
     else
         take_screenshot
     fi
 }
 
 take_screenshot() {
-    local filename filepath
+    local filename filepath shoot
 
     filename="$(date "+%Y-%m-%d %H.%M.%S").png"
     filepath="$_CACHE_DIR/$filename"
 
     if [ "$mode" = "clipboard" ]; then
         from_clipboard > "$filepath"
-    elif is_wayland; then
-        shoot_wayland "$filepath"
     else
-        shoot_x "$filepath"
+        is_wayland && shoot="shoot_wayland" || shoot="shoot_x"
+
+        echo "Waiting for selection..." >&2
+        $shoot "$filepath"
     fi
 
     attempt_rename "$filename"
@@ -451,40 +497,67 @@ shoot_x() {
 }
 
 attempt_rename() {
-    local newname
+    local cmd newname
 
-    if [ ! "$rename" = true ] || ! has yad; then echo "$1"
-    else
-        newname=$(yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
-            --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null)
+    if [ "$rename" = true ] && is_interactive; then newname="$(rename_cli "$1")"
+    elif [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
+    else newname="$1"; fi
 
-        if [ ! "$1" = "$newname" ]; then
-            mv "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname"
-        fi
-
-        echo "$newname"
+    if [ ! "$1" = "$newname" ]; then
+        [ $debug = true ] && cmd="mv -v" || cmd="mv"
+        $cmd "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname" >&2
     fi
+
+    echo "$newname"
+}
+
+rename_cli() {
+    echo "Screenshot saved!" >&2
+    read -rp "Enter filename [$1]: " newname
+    echo "${newname:-$1}"
+}
+
+rename_gui() {
+    yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
+        --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null
 }
 
 nc_upload() {
-    local filename; read -r filename
+    local filename output respCode url; read -r filename
 
-    echo "Uploading screenshot..." >&2
+    echo -e "\nUploading screenshot..." >&2
 
+    [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o /dev/null -w "%{http_code}")
+        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o $output -w "%{http_code}")
 
     if [ "$respCode" -ne 201 ]; then
+        echo >&2
+        [ $debug = true ] && cat "$_CACHE_DIR/curlout" >&2
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
+    url="$server/apps/gallery/#${savedir}/$filename"
+    echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
 
 nc_share() {
-    curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
+    local json respCode
+    [ $debug = true ] && echo -e "\nApplying share settings..." >&2
+
+    respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
-        -F "path=/$savedir/$1" -F "shareType=3"
+        -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
+
+    json="$(<"$_CACHE_DIR/share.json")"
+    [ $debug = true ] && echo -e "Nextcloud response:\n${json}\n" >&2
+
+    if [ "$respCode" -ne 200 ]; then
+        echo "Sharing failed. Expected 200 but server returned a $respCode response" >&2 && exit 1
+    fi
+
+    echo "$json"
 }
 
 select_window() {
@@ -549,9 +622,8 @@ send_notification() {
     if has notify-send; then
         notify-send -u normal -t 5000 -i insert-link NextShot \
             "${1:-"<a href=\"$url\">Your link</a> is ready to paste!"}"
-    else
-        echo "${1:-"Link $url copied to clipboard. Paste away!"}"
     fi
+    echo "${1:-"Copied $url to clipboard. Paste away!"}"
 }
 
 config_cli() {

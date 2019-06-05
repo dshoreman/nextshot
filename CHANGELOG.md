@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.2.0] - 2019-06-06
+### Added
+* Ability to force environment with `NEXTSHOT_ENV` var or `--env` flag
+* Debug mode for detailed output, enabled with `-v, --verbose`
+* Basic error handling in case of issues when sharing a screenshot
+
+### Changed
+* Filename prompt now uses CLI instead of Yad when running interactively
+
+### Fixed
+* Quit item in tray menu didn't actually quit
+
+
 ## [1.1.1] - 2019-04-04
 ### Fixed
 * Issue where not setting delay would break screenshots
