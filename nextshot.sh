@@ -522,7 +522,7 @@ rename_gui() {
 }
 
 nc_upload() {
-    local filename output respCode; read -r filename
+    local filename output respCode url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
@@ -536,6 +536,8 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
+    url="$server/apps/gallery/#${savedir}/$filename"
+    echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
 
@@ -619,9 +621,8 @@ send_notification() {
     if has notify-send; then
         notify-send -u normal -t 5000 -i insert-link NextShot \
             "${1:-"<a href=\"$url\">Your link</a> is ready to paste!"}"
-    else
-        echo "${1:-"Link $url copied to clipboard. Paste away!"}"
     fi
+    echo "${1:-"Copied $url to clipboard. Paste away!"}"
 }
 
 config_cli() {
