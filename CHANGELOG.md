@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+
+## [1.2.0] - 2019-06-06
 ### Added
 * Ability to force environment with `NEXTSHOT_ENV` var or `--env` flag
 * Debug mode for detailed output, enabled with `-v, --verbose`
