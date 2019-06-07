@@ -527,7 +527,7 @@ nc_upload() {
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$server/remote.php/dav/files/$username/$savedir/$filename"
+    reqUrl="$server/remote.php/dav/files/$username/$savedir/${filename// /%20}"
     [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     [ $debug = true ] && echo "Sending request to ${reqUrl}..." >&2
 
