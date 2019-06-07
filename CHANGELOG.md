@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Fixed
+* Issue where duplicate files would fail with unexpected response
 
 
 ## [1.2.0] - 2019-06-06
