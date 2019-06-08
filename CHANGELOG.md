@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.2.1] - 2019-06-08
+### Fixed
+* Issue where duplicate files would fail with unexpected response
+
+
 ## [1.2.0] - 2019-06-06
 ### Added
 * Ability to force environment with `NEXTSHOT_ENV` var or `--env` flag
@@ -161,7 +166,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.1.0...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.2.1...develop
+[1.2.1]: https://github.com/dshoreman/nextshot/compare/v1.2.0...v1.2.1
+[1.2.0]: https://github.com/dshoreman/nextshot/compare/v1.1.1...v1.2.0
+[1.1.1]: https://github.com/dshoreman/nextshot/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/dshoreman/nextshot/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/dshoreman/nextshot/compare/v0.8.2...v1.0.0
 [0.8.2]: https://github.com/dshoreman/nextshot/compare/v0.8.1...v0.8.2

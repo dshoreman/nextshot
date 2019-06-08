@@ -277,5 +277,3 @@ Likewise if you're running from X11 but Nextshot detects Wayland, you can set `-
 ## Known Issues
 
 * [Tray menu is currently unavailable on Wayland](https://github.com/dshoreman/nextshot/issues/48)
-* When using `--file` or the `rename` config option,
-    [duplicate files may fail](https://github.com/dshoreman/nextshot/issues/50)

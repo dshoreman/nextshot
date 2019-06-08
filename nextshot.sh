@@ -27,7 +27,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.2.0"
+readonly _VERSION="1.2.1"
 
 usage() {
     echo "Usage:"
@@ -531,7 +531,10 @@ nc_upload() {
     respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
         -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o $output -w "%{http_code}")
 
-    if [ "$respCode" -ne 201 ]; then
+    if [ "$respCode" = 204 ]; then
+        [ $debug = true ] && echo "Expected 201 but server returned a 204 response" >&2
+        echo "File already exists and was overwritten" >&2
+    elif [ "$respCode" -ne 201 ]; then
         echo >&2
         [ $debug = true ] && cat "$_CACHE_DIR/curlout" >&2
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
