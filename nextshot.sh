@@ -27,7 +27,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.2.1"
+readonly _VERSION="1.2.2"
 
 usage() {
     echo "Usage:"
@@ -523,12 +523,15 @@ rename_gui() {
 }
 
 nc_upload() {
-    local filename output respCode url; read -r filename
+    local filename output respCode reqUrl url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
+    reqUrl="$server/remote.php/dav/files/$username/$savedir/${filename// /%20}"
     [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
-    respCode=$(curl -u "$username":"$password" "$server/remote.php/dav/files/$username/$savedir/$filename" \
+    [ $debug = true ] && echo "Sending request to ${reqUrl}..." >&2
+
+    respCode=$(curl -u "$username":"$password" "$reqUrl" \
         -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o $output -w "%{http_code}")
 
     if [ "$respCode" = 204 ]; then
@@ -547,7 +550,7 @@ nc_upload() {
 
 nc_share() {
     local json respCode
-    [ $debug = true ] && echo -e "\nApplying share settings..." >&2
+    [ $debug = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
     respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
         "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
