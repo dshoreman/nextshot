@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Fixed
+* jq was listed in --deps as a Wayland dependency, not a global one
 
 
 ## [1.2.2] - 2019-06-13
