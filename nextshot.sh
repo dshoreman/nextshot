@@ -27,7 +27,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.2.2"
+readonly _VERSION="1.2.3"
 
 usage() {
     echo "Usage:"
@@ -323,11 +323,11 @@ make_url() {
 status_check() {
     local reqG=(
         "curl curl to interact with Nextcloud"
+        "jq   jq   to get share links, and (on Wayland) list visible windows"
         "yad  yad  for the tray icon and to display config and rename windows"
     )
     local reqW=(
         "grim           grim         to take screenshots"
-        "jq             jq           to list visible windows"
         "slurp          slurp        for area selection"
         "wl-clipboard   wl-clipboard to interact with the clipboard"
     )
