@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.2.3] - 2019-06-17
+### Fixed
+* jq was listed in --deps as a Wayland dependency, not a global one
+
+
 ## [1.2.2] - 2019-06-13
 ### Fixed
 * Issue on some systems that caused spaces in filename to break upload
@@ -171,7 +176,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.2.2...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.2.3...develop
+[1.2.3]: https://github.com/dshoreman/nextshot/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/dshoreman/nextshot/compare/v1.2.1...v1.2.2
 [1.2.1]: https://github.com/dshoreman/nextshot/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/dshoreman/nextshot/compare/v1.1.1...v1.2.0
