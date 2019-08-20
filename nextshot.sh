@@ -684,8 +684,7 @@ and click <b>Create new app password</b>.\n:LBL" \
         --button="Cancel!gtk-cancel:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
         "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
-    # SC2001 Updated 9th Jan to include `sed 's/a/b/g' <<< "$c"`
-    sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
+    echo -e "${config}" > "$_CONFIG_FILE"
 }
 
 config_abort() {
