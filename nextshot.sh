@@ -16,6 +16,10 @@
 # You should have received a copy of the GNU General Public License along
 # with this program; if not, write to the Free Software Foundation, Inc.,
 # 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+# ---
+# shellcheck disable=SC2251
+# The '!'s in getopt commands are intended to bypass errexit when
+# it fails, otherwise we can't check for invalid args afterwards.
 
 set -Eeo pipefail
 
@@ -171,9 +175,6 @@ parse_opts() {
     local -r LONG=deps::,dependencies::,env:,help,tray,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
-    # shellcheck disable=SC2251
-    # The ! here is intended to bypass errexit when it fails,
-    # otherwise we can't check for invalid args afterwards.
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
@@ -683,6 +684,7 @@ and click <b>Create new app password</b>.\n:LBL" \
         --button="Cancel!gtk-cancel:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
         "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
+    # SC2001 Updated 9th Jan to include `sed 's/a/b/g' <<< "$c"`
     sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
 }
 
