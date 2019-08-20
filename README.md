@@ -278,7 +278,7 @@ Likewise if you're running from X11 but Nextshot detects Wayland, you can set `-
 
 There was a bug introduced to Yad in v1.0 that breaks context menus in the tray icons it creates.
 
-This issue was fixed in v1cont/yad@06de51cff3ff4c98039161745f20c2c16a516cb3, but at this time is unreleased. Users of Arch-based distros can install `yad-git`
+This issue was fixed in [v1cont/yad@06de51c], but at this time is unreleased. Users of Arch-based distros can install `yad-git`
 from the AUR which will grab the latest commit. On other distros, manually build and install Yad from the master branch.
 
 The other option is reverting to v0.42.1 (the latest version pre-1.0) until a new version is released, but this isn't advised.
@@ -287,3 +287,5 @@ The other option is reverting to v0.42.1 (the latest version pre-1.0) until a ne
 ## Known Issues
 
 * [Tray icon is currently unavailable on Wayland](https://github.com/dshoreman/nextshot/issues/48)
+
+[v1cont/yad@06de51c]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
