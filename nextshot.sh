@@ -171,6 +171,9 @@ parse_opts() {
     local -r LONG=deps::,dependencies::,env:,help,tray,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
+    # shellcheck disable=SC2251
+    # The ! here is intended to bypass errexit when it fails,
+    # otherwise we can't check for invalid args afterwards.
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
     if [[ ${PIPESTATUS[0]} -ne 0 ]]; then
         echo "Run 'nextshot --help' for a list of commands."
