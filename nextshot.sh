@@ -131,7 +131,7 @@ Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
-Quit Nextshot       ! kill $traypid       !gtk-quit" >&3
+Quit Nextshot       ! kill $traypid       !Quit!application-exit" >&3
 
     echo "icon:camera-photo-symbolic" >&3
     echo "tooltip:Nextshot" >&3
@@ -518,7 +518,7 @@ rename_cli() {
 }
 
 rename_gui() {
-    yad --entry --title "NextShot" --borders=10 --button="gtk-save" --entry-text="$1" \
+    yad --entry --title "NextShot" --borders=10 --button="Save!document-save" --entry-text="$1" \
         --text="<b>Screenshot Saved!</b>\nEnter filename to save to NextCloud:" 2>/dev/null
 }
 
@@ -655,7 +655,7 @@ config_gui() {
 Seems this is your first time running this thing.
 Fill out the options below and you'll be taking screenshots in no time:\n" \
         --image="preferences-other" --borders=10 --fixed --quoted-output --form \
-        --button="gtk-quit:1" --button="gtk-ok:0" \
+        --button="Quit!application-exit:1" --button="OK!gtk-ok:0" \
         --field="NextCloud Server URL" \
         --field="The root URL of your Nextcloud installation, e.g. https://nc.mydomain.com\n:LBL" \
         --field="Username" \
@@ -677,7 +677,7 @@ and click <b>Create new app password</b>.\n:LBL" \
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --button="gtk-cancel:1" --button="gtk-save:0" --width=400 --height=175 --form --field=":TXT" \
+        --button="Cancel!gtk-cancel:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
         "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     sed 's/\\n/\n/g' <<< "$config" > "$_CONFIG_FILE"
