@@ -369,9 +369,9 @@ check_deps() {
 }
 
 check_dep() {
-    local pkg="$2"; shift 2
+    local cmd="$1" pkg="$2"; shift 2
 
-    has "$dep" && echo -n " ✔ $pkg" || echo -n " ✘ $pkg"
+    has "$cmd" && echo -n " ✔ $pkg" || echo -n " ✘ $pkg"
     echo " -- $*"
 }
 
