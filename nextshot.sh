@@ -661,7 +661,7 @@ config_gui() {
 Seems this is your first time running this thing.
 Fill out the options below and you'll be taking screenshots in no time:\n" \
         --image="preferences-other" --borders=10 --fixed --quoted-output --form \
-        --button="Quit!application-exit:1" --button="OK!gtk-ok:0" \
+        --button="Quit!application-exit:1" --button="Continue!go-next:0" \
         --field="NextCloud Server URL" \
         --field="The root URL of your Nextcloud installation, e.g. https://nc.mydomain.com\n:LBL" \
         --field="Username" \
@@ -683,7 +683,7 @@ and click <b>Create new app password</b>.\n:LBL" \
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --button="Cancel!gtk-cancel:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
+        --button="Cancel!window-close:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
         "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     echo -e "${config}" > "$_CONFIG_FILE"
