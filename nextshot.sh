@@ -135,7 +135,7 @@ Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
-Quit Nextshot       ! kill $traypid       !Quit!application-exit" >&3
+Quit Nextshot       ! kill $traypid       !application-exit" >&3
 
     echo "icon:camera-photo-symbolic" >&3
     echo "tooltip:Nextshot" >&3
