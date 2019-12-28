@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Fixed
+* Pasting the share URL in Alacritty will no longer hang or error
 
 
 ## [1.2.4] - 2019-08-21

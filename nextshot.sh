@@ -400,6 +400,8 @@ to_clipboard() {
     [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
 
     if is_wayland; then wl-copy -t $mime
+    elif [ "${mime}" == "text/plain" ]; then
+        xclip -selection clipboard
     else
         xclip -selection clipboard -t $mime
     fi
