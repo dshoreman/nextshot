@@ -125,7 +125,7 @@ If you have Yad installed, you can use Nextshot via its tray icon. A normal clic
 trigger Nextshot's [`--area`](#screenshot-modes) screenshot mode, while right clicking
 will open a menu with quick access to most of Nextshot's functions.
 
-![Preview of Nextshot tray menu](tray.png)
+![Preview of Nextshot tray menu](resources/tray.png)
 
 The Nextshot tray menu can be started with `nextshot -t`, which you can add to `.xinitrc`
 or your i3/Sway config to have it automatically started when you login.
