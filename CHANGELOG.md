@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* New "logo" with a proper png icon for the tray menu
+
 ### Changed
 * Config window's button icons no longer depend on GTK icon names
 * Running `make install` is now more verbose

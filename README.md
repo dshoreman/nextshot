@@ -1,14 +1,18 @@
-# Nextshot
+![Nextshot logo](resources/logo.png)
+
+**Quickly take screenshots on Linux—sharing instantly with Nextcloud**
 
 [![GitHub release](https://img.shields.io/github/tag/dshoreman/nextshot.svg?label=release)](https://github.com/dshoreman/nextshot/releases)
-[![AUR version](https://img.shields.io/aur/version/nextshot.svg)](https://aur.archlinux.org/packages/nextshot)
+[![AUR version](https://img.shields.io/aur/version/nextshot.svg)][1]
 [![Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=master)](https://travis-ci.com/dshoreman/nextshot)
+[![GitHub issues](https://img.shields.io/github/issues/dshoreman/nextshot)][3]
+[![License](https://img.shields.io/github/license/dshoreman/nextshot)](LICENSE.md)
 
-Nextshot is a simple utility for taking and sharing screenshots on Linux.
+---
 
-By default it will automatically upload your screenshot to Nextcloud, share with the
-default settings and copy the resulting link to the primary clipboard. It can also
-copy to/from clipboard and share local files.
+Nextshot enables quick and easy capture of the desktop, a window or selection—either instantly
+or after a delay. Images can be copied directly to clipboard, or shared automatically via
+Nextcloud (the default) so you can paste the public link in chats.
 
 #### Compatibility
 
@@ -21,8 +25,6 @@ compatibility with compositors other than Sway.
 
 ## Table of Contents
 
-* [Introduction](#nextshot)
-* [Table of Contents](#table-of-contents)
 * [Installation](#installation)
   * [Arch Linux](#arch-linux)
   * [Manual Install](#manual-install)
@@ -288,8 +290,13 @@ If you find Nextshot useful and would like to contribute, there are a few ways y
 * Send a PR if you know some Bash! Check the [open issues][3] for ideas
 * Finally, donate via [PayPal] or [Liberapay] (but only if you can afford to)
 
+---
+
+*Nextshot camera icon provided by [Icons8][4].*
+
 [PayPal]: https://paypal.me/dshoreman
 [Liberapay]: https://liberapay.com/dshoreman
 [1]: https://aur.archlinux.org/packages/nextshot/
 [2]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
 [3]: https://github.com/dshoreman/nextshot/issues
+[4]: https://icons8.com
