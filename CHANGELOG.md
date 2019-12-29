@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+* `--prune-cache` option to remove cached images older than 30 days
 * New "logo" with a proper png icon for the tray menu
 
 ### Changed
