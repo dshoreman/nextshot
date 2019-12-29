@@ -5,12 +5,12 @@ all:
 
 install:
 	@echo "Preparing package structure"
-	@mkdir -p "$(DESTDIR)$(PREFIX)/bin"
-
+	@mkdir -vp "$(DESTDIR)$(PREFIX)/bin"
 	@echo "Installing Nextshot..."
-	@cp -p nextshot.sh "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@cp -vp nextshot.sh "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@echo "Install complete"
 
 uninstall:
 	@echo "Uninstalling Nextshot..."
-	@rm -v "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@rm -vf "$(DESTDIR)$(PREFIX)/bin/nextshot"
 	@echo "Uninstall complete"
