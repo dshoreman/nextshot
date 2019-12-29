@@ -41,29 +41,21 @@ compatibility with compositors other than Sway.
 
 ### Arch Linux
 
-Install `nextshot` and `yad` using your favourite AUR helper. Yad enables the tray menu
-and is optional on i3, but required on Wayland to enable window selection if you activate
-Nextshot with a keyboard shortcut.
+NextShot can be installed [from the AUR] as `nextshot`, though its dependencies vary
+based on your environment:
 
 ```sh
-pacaur -S nextshot && pacaur -S --asdeps yad
+# To use in i3 (or other X11-based environments)
+sudo pacman -S --asdeps imagemagick slop xclip yad
+
+# To use in Sway
+sudo pacman -S --asdeps grim slurp wl-clipboard yad
 ```
 
-To check dependencies after installing Nextshot, run `nextshot --deps` in a terminal.
-Some are required but listed in the `PKGBUILD` as optional - the packages you need
-will vary based on which environment you run:
-
-```sh
-# To run Nextshot in i3 and other X11-based environments
-sudo pacman -S --asdeps imagemagick slop xclip
-
-# To run Nextshot in Sway
-sudo pacman -S --asdeps grim slurp wl-clipboard
-```
-
-Nextshot will not automatically install any keyboard shortcuts. A set of [recommended
-keybindings](#recommended-shortcuts) is provided below for users of i3 and Sway, which
-can be tweaked to fit your personal workflow.
+For more information on dependencies, run `nextshot --deps` after install.
+Note that Nextshot will not automatically  
+install any keyboard shortcuts. A set of [recommended keybindings](#recommended-shortcuts)
+is provided below for users of i3 and Sway.
 
 ### Manual Install
 
@@ -71,8 +63,7 @@ For other distributions, install dependencies as above then run the following to
 
 ```sh
 git clone -b master https://github.com/dshoreman/nextshot.git
-cd nextshot
-sudo make install
+cd nextshot && sudo make install
 ```
 
 ## Usage
@@ -286,4 +277,5 @@ update to v5 or greater and the tray menu will be working again. If you still ha
 
 * [Tray icon is currently unavailable on Wayland](https://github.com/dshoreman/nextshot/issues/48)
 
+[from the AUR]: https://aur.archlinux.org/packages/nextshot/
 [v1cont/yad@06de51c]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
