@@ -36,12 +36,13 @@ compatibility with compositors other than Sway.
   * [Available Options](#available-options)
 * [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
+* [Contributing](#contributing)
 
 ## Installation
 
 ### Arch Linux
 
-NextShot can be installed [from the AUR] as `nextshot`, though its dependencies vary
+NextShot can be installed [from the AUR][1] as `nextshot`, though its dependencies vary
 based on your environment:
 
 ```sh
@@ -269,7 +270,7 @@ Likewise if you're running from X11 but Nextshot detects Wayland, you can set `-
 
 There was a bug introduced to Yad in v1.0 that breaks context menus in the tray icons it creates.
 
-This issue was fixed in [v1cont/yad@06de51c], which was released as part of Yad v5.0. If you're still running an older version,
+This issue was fixed in [v1cont/yad@06de51c][2], which was released as part of Yad v5.0. If you're still running an older version,
 update to v5 or greater and the tray menu will be working again. If you still have problems, please create an issue.
 
 
@@ -277,5 +278,18 @@ update to v5 or greater and the tray menu will be working again. If you still ha
 
 * [Tray icon is currently unavailable on Wayland](https://github.com/dshoreman/nextshot/issues/48)
 
-[from the AUR]: https://aur.archlinux.org/packages/nextshot/
-[v1cont/yad@06de51c]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
+
+## Contributing
+
+If you find Nextshot useful and would like to contribute, there are a few ways you can help:
+* Vote for the [nextshot package][1] on the AUR
+* [Report any bugs][3] you find while using Nextshot
+* Submit a feature request if there's something you'd like added
+* Send a PR if you know some Bash! Check the [open issues][3] for ideas
+* Finally, donate via [PayPal] or [Liberapay] (but only if you can afford to)
+
+[PayPal]: https://paypal.me/dshoreman
+[Liberapay]: https://liberapay.com/dshoreman
+[1]: https://aur.archlinux.org/packages/nextshot/
+[2]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
+[3]: https://github.com/dshoreman/nextshot/issues
