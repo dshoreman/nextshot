@@ -26,11 +26,11 @@ compatibility with compositors other than Sway.
 * [Installation](#installation)
   * [Arch Linux](#arch-linux)
   * [Manual Install](#manual-install)
+  * [Recommended Shortcuts](#recommended-shortcuts)
 * [Usage](#usage)
   * [Screenshot Modes](#screenshot-modes)
   * [Upload Modes](#upload-modes)
   * [Tray Menu](#tray-menu)
-  * [Recommended Shortcuts](#recommended-shortcuts)
 * [Configuration](#configuration)
   * [Example nextshot.conf](#example-nextshotconf)
   * [Available Options](#available-options)
@@ -65,6 +65,27 @@ For other distributions, install dependencies as above then run the following to
 git clone -b master https://github.com/dshoreman/nextshot.git
 cd nextshot && sudo make install
 ```
+
+### Recommended Shortcuts
+
+To have Nextshot's primary functions bound to the Print Screen key on i3 and Sway, add the following
+to your `config` file in `~/.config/i3` and/or `~/.config/sway` respectively:
+
+```
+bindsym Print exec --no-startup-id "nextshot -f"
+bindsym Mod4+Print exec --no-startup-id "nextshot -w"
+bindsym Shift+Print exec --no-startup-id "nextshot -a"
+
+bindsym Ctrl+Print exec --no-startup-id "nextshot -fc"
+bindsym Ctrl+Mod4+Print exec --no-startup-id "nextshot -wc"
+bindsym Ctrl+Shift+Print exec --no-startup-id "nextshot -ac"
+```
+
+These bindings will have `PrtScr` capture the full screen, `Shift+PrtScr` capture an area, and
+`Super+PrtScr` capture a window—each uploading automatically to Nextcloud and copying the
+share link to your clipboard.
+
+When combined with `ctrl`, the raw image will be copied to clipboard instead of uploading to Nextcloud.
 
 ## Usage
 
@@ -120,27 +141,6 @@ will open a menu with quick access to most of Nextshot's functions.
 
 The Nextshot tray menu can be started with `nextshot -t`, which you can add to `.xinitrc`
 or your i3/Sway config to have it automatically started when you login.
-
-### Recommended Shortcuts
-
-To have Nextshot's primary functions bound to the Print Screen key on i3 and Sway, add the following
-to your `config` file in `~/.config/i3` and/or `~/.config/sway` respectively:
-
-```
-bindsym Print exec --no-startup-id "nextshot -f"
-bindsym Mod4+Print exec --no-startup-id "nextshot -w"
-bindsym Shift+Print exec --no-startup-id "nextshot -a"
-
-bindsym Ctrl+Print exec --no-startup-id "nextshot -fc"
-bindsym Ctrl+Mod4+Print exec --no-startup-id "nextshot -wc"
-bindsym Ctrl+Shift+Print exec --no-startup-id "nextshot -ac"
-```
-
-These bindings will have `PrtScr` capture the full screen, `Shift+PrtScr` capture an area, and
-`Super+PrtScr` capture a window - each uploading automatically to Nextcloud and copying the
-share link to your clipboard.
-
-When combined with `ctrl`, the raw image will be copied to clipboard instead of uploading to Nextcloud.
 
 ## Configuration
 
