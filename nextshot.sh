@@ -42,6 +42,7 @@ usage() {
     echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
+    edho "  --prune-cache     Clean up the screenshot cache"
     echo "  -v, --verbose     Enable verbose output for debugging"
     echo "  -V, --version     Output version information and exit"
     echo
@@ -172,7 +173,7 @@ setup() {
 
 parse_opts() {
     local -r OPTS=D::htvVawd:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -213,6 +214,8 @@ parse_opts() {
                 fi
 
                 tray_menu && exit 0 ;;
+            --prune-cache)
+                prune_cache && exit 0 ;;
             -v|--verbose)
                 debug=true; echo "Debug mode enabled"; shift ;;
             -V|--version)
@@ -280,6 +283,36 @@ parse_environment() {
     if [ $debug = true ]; then
         echo "Environment $method set to ${NEXTSHOT_ENV}"
     fi
+}
+
+prune_cache() {
+    local files response count=0 size
+
+    echo "Checking for cached screenshots more than 30 days old..."
+    files="$(find "$_CACHE_DIR" -maxdepth 1 -iname '20*-*-* *.*.*.png' -mtime +30)"
+
+    if [[ "${files}" == "" ]]; then
+        echo "[32;1mLooks like the cache is clean![0m"
+        echo "Nothing to do, exiting."
+        exit
+    fi
+
+    count=$(echo "${files}" | wc -l)
+    size=$(echo "${files}" | xargs -d '\n' du -ch | grep total$ | cut -f1)
+
+    echo "[33;1mFound ${count} cached images to delete, totalling ${size}![0m"
+
+    read -rp "Continue? [yN] " response
+    echo
+
+    if [[ ! "${response,,}" =~ ^(y|yes)$ ]]; then
+        echo "Cleanup aborted." && exit 1
+    fi
+
+    echo -e "PRUNING! Please wait...\n"
+    echo "${files}" | xargs -d '\n' rm -v \
+        && echo "[32;1mCache pruning complete![0m" \
+        || echo "[31;1mCould not remove some files. Try again?[0m"
 }
 
 delay_capture() {
