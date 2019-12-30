@@ -286,15 +286,15 @@ parse_environment() {
 }
 
 prune_cache() {
-    local findcmd response count=0 size
-
-    findcmd=(find "$_CACHE_DIR" -maxdepth 1 -iname '20*-*-* *.*.*.png' -mtime +30)
+    local files response count=0 size
 
     echo "Checking for cached screenshots more than 30 days old..."
-    count=$("${findcmd[@]}" | wc -l)
-    size=$("${findcmd[@]}" -exec du -ch {} + | grep total$ | cut -f1)
+    files="$(find "$_CACHE_DIR" -maxdepth 1 -iname '20*-*-* *.*.*.png' -mtime +30)"
 
-    echo "[31;1m${count} cached images will be deleted, totalling ${size}![0m"
+    count=$(echo "${files}" | wc -l)
+    size=$(echo "${files}" | xargs -d '\n' du -ch | grep total$ | cut -f1)
+
+    echo "[31;1mFound ${count} cached images to delete, totalling ${size}![0m"
 
     read -rp "Continue? [yN] " response
     echo
@@ -304,7 +304,8 @@ prune_cache() {
     fi
 
     echo -e "PRUNING! Please wait...\n"
-    "${findcmd[@]}" -delete && echo "Cache pruning complete!" \
+    echo "${files}" | xargs -d '\n' rm -v \
+        && echo "Cache pruning complete!" \
         || echo "Could not remove some files. Try again?"
 }
 
