@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.3.0"
+readonly _VERSION="1.3.1"
 
 usage() {
     echo "Usage:"
@@ -42,7 +42,7 @@ usage() {
     echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
-    edho "  --prune-cache     Clean up the screenshot cache"
+    echo "  --prune-cache     Clean up the screenshot cache"
     echo "  -v, --verbose     Enable verbose output for debugging"
     echo "  -V, --version     Output version information and exit"
     echo
