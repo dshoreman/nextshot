@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+
+## [1.3.0] - 2019-12-31
 ### Added
 * `--prune-cache` option to remove cached images older than 30 days
 * New "logo" with a proper png icon for the tray menu
@@ -192,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.2.4...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.3.0...develop
+[1.3.0]: https://github.com/dshoreman/nextshot/compare/v1.2.4...v1.3.0
 [1.2.4]: https://github.com/dshoreman/nextshot/compare/v1.2.3...v1.2.4
 [1.2.3]: https://github.com/dshoreman/nextshot/compare/v1.2.2...v1.2.3
 [1.2.2]: https://github.com/dshoreman/nextshot/compare/v1.2.1...v1.2.2
