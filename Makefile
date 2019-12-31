@@ -5,12 +5,15 @@ all:
 
 install:
 	@echo "Preparing package structure"
-	@mkdir -p "$(DESTDIR)$(PREFIX)/bin"
-
+	@mkdir -vp "$(DESTDIR)$(PREFIX)/bin"
+	@mkdir -vp "$(DESTDIR)$(PREFIX)/share/pixmaps"
 	@echo "Installing Nextshot..."
-	@cp -p nextshot.sh "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@cp -v resources/icons/16x16.png "$(DESTDIR)$(PREFIX)/share/pixmaps/nextshot-16x16.png"
+	@cp -vp nextshot.sh "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@echo "Install complete"
 
 uninstall:
 	@echo "Uninstalling Nextshot..."
-	@rm -v "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@rm -vf "$(DESTDIR)$(PREFIX)/bin/nextshot"
+	@rm -vf "$(DESTDIR)$(PREFIX)/share/pixmaps/nextshot-16x16.png"
 	@echo "Uninstall complete"

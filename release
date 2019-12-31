@@ -1,0 +1,99 @@
+#!/usr/bin/env bash
+
+main() {
+    case "$1" in
+        a|aur)
+            update_aur ;;
+        f|finish|finalise)
+            action="${2:-release}"
+            newver="$(./nextshot.sh -V | grep -oP 'v\K.*')"
+            finish_release ;;
+        h|hot|hotfix)
+            newver="$2" action="hotfix"
+            bump_version ;;
+        *)
+            newver="$1" action="release"
+            git flow release start "$newver" && bump_version ;;
+    esac
+}
+
+bump_version() {
+    echo
+    echo
+    echo "+----------------+"
+    echo "| UPDATING FILES |"
+    echo "+----------------+"
+    echo
+    oldver="$(./nextshot.sh -V | awk '{ print $2 }')"
+    search="${oldver}\(...develop\)"
+    today=$(date "+%Y-%m-%d")
+
+    echo -n "Bumping version to ${newver}... "
+    sed -i "s/\(_VERSION=\)\".*\"$/\1\"${newver}\"/" nextshot.sh && echo "Done" || exit 1
+
+    # 1. Insert header for new version's changes
+    # 2. Find the [Unreleased] link and add the new release diff below it
+    # 3. Update the previous version number in the Unreleased link
+    echo -n "Updating changelog... "
+    sed -i -e "s/^\(## \[Unreleased\]\)$/\1\n\n\n## [${newver}] - ${today}/" \
+        -e "s/ \(.*\/\)${search}/&\n[${newver}]: \1${oldver}...v${newver}/" \
+        -e "s/${search}/v${newver}\1/" CHANGELOG.md && echo "Done" || exit 1
+
+    echo -n "Updating PKGBUILD version... "
+    sed -i "s/^\(pkgver=\).*$/\1${newver}/" .aur/PKGBUILD && echo "Done" || exit 1
+
+    echo
+    git add nextshot.sh CHANGELOG.md
+    git commit -m "Bump version to ${newver}"
+
+    echo
+    echo "Now's your chances to make more changes. If there are none, press y."
+    read -rp "Finalise release [yN]? " autopush
+
+    if [ ! "$autopush" = "y" ]; then
+        echo
+        echo "Aborting to make more changes. When ready, run"
+        echo "'gf release finish ${newver}' then push all branches"
+        echo "and tags before finalising with './release aur'"
+        exit 0
+    fi
+
+    finish_release
+}
+
+finish_release() {
+    echo
+    echo
+    echo "+--------------------+"
+    echo "| FINALISING RELEASE |"
+    echo "+--------------------+"
+    echo
+    git flow "$action" finish "${newver}" \
+        && git push origin --all && git push origin --tags \
+        && update_aur
+}
+
+update_aur() {
+    echo
+    echo
+    echo "+-----------------------+"
+    echo "| PREPARING AUR PACKAGE |"
+    echo "+-----------------------+"
+    echo
+    cd .aur || exit 1
+
+    echo "Updating package checksums..."
+    updpkgsums && echo || exit 1
+
+    echo -n "Rebuilding .SRCINFO... "
+    makepkg --printsrcinfo > .SRCINFO && echo -e "Done\n" || exit 1
+
+    git add PKGBUILD .SRCINFO
+    git commit -m "Update to $(../nextshot.sh -V | awk '{print $2}')" \
+        && echo && git push && echo
+
+    echo "AUR repo updated! Current version as seen in AUR:"
+    pacaur -Ss nextshot
+}
+
+main "$@"

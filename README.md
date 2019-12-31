@@ -1,14 +1,18 @@
-# Nextshot
+![Nextshot logo](resources/logo.png)
+
+**Quickly take screenshots on Linux—sharing instantly with Nextcloud**
 
 [![GitHub release](https://img.shields.io/github/tag/dshoreman/nextshot.svg?label=release)](https://github.com/dshoreman/nextshot/releases)
-[![AUR version](https://img.shields.io/aur/version/nextshot.svg)](https://aur.archlinux.org/packages/nextshot)
+[![AUR version](https://img.shields.io/aur/version/nextshot.svg)][1]
 [![Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=master)](https://travis-ci.com/dshoreman/nextshot)
+[![GitHub issues](https://img.shields.io/github/issues/dshoreman/nextshot)][3]
+[![License](https://img.shields.io/github/license/dshoreman/nextshot)](LICENSE.md)
 
-Nextshot is a simple utility for taking and sharing screenshots on Linux.
+---
 
-By default it will automatically upload your screenshot to Nextcloud, share with the
-default settings and copy the resulting link to the primary clipboard. It can also
-copy to/from clipboard and share local files.
+Nextshot enables quick and easy capture of the desktop, a window or selection—either instantly
+or after a delay. Images can be copied directly to clipboard, or shared automatically via
+Nextcloud (the default) so you can paste the public link in chats.
 
 #### Compatibility
 
@@ -21,49 +25,40 @@ compatibility with compositors other than Sway.
 
 ## Table of Contents
 
-* [Introduction](#nextshot)
-* [Table of Contents](#table-of-contents)
 * [Installation](#installation)
   * [Arch Linux](#arch-linux)
   * [Manual Install](#manual-install)
+  * [Recommended Shortcuts](#recommended-shortcuts)
 * [Usage](#usage)
   * [Screenshot Modes](#screenshot-modes)
   * [Upload Modes](#upload-modes)
   * [Tray Menu](#tray-menu)
-  * [Recommended Shortcuts](#recommended-shortcuts)
 * [Configuration](#configuration)
   * [Example nextshot.conf](#example-nextshotconf)
   * [Available Options](#available-options)
 * [Troubleshooting](#troubleshooting)
 * [Known Issues](#known-issues)
+* [Contributing](#contributing)
 
 ## Installation
 
 ### Arch Linux
 
-Install `nextshot` and `yad` using your favourite AUR helper. Yad enables the tray menu
-and is optional on i3, but required on Wayland to enable window selection if you activate
-Nextshot with a keyboard shortcut.
+NextShot can be installed [from the AUR][1] as `nextshot`, though its dependencies vary
+based on your environment:
 
 ```sh
-pacaur -S nextshot && pacaur -S --asdeps yad
+# To use in i3 (or other X11-based environments)
+sudo pacman -S --asdeps imagemagick slop xclip yad
+
+# To use in Sway
+sudo pacman -S --asdeps grim slurp wl-clipboard yad
 ```
 
-To check dependencies after installing Nextshot, run `nextshot --deps` in a terminal.
-Some are required but listed in the `PKGBUILD` as optional - the packages you need
-will vary based on which environment you run:
-
-```sh
-# To run Nextshot in i3 and other X11-based environments
-sudo pacman -S --asdeps imagemagick slop xclip
-
-# To run Nextshot in Sway
-sudo pacman -S --asdeps grim slurp wl-clipboard
-```
-
-Nextshot will not automatically install any keyboard shortcuts. A set of [recommended
-keybindings](#recommended-shortcuts) is provided below for users of i3 and Sway, which
-can be tweaked to fit your personal workflow.
+For more information on dependencies, run `nextshot --deps` after install.
+Note that Nextshot will not automatically  
+install any keyboard shortcuts. A set of [recommended keybindings](#recommended-shortcuts)
+is provided below for users of i3 and Sway.
 
 ### Manual Install
 
@@ -71,9 +66,29 @@ For other distributions, install dependencies as above then run the following to
 
 ```sh
 git clone -b master https://github.com/dshoreman/nextshot.git
-cd nextshot
-sudo make install
+cd nextshot && sudo make install
 ```
+
+### Recommended Shortcuts
+
+To have Nextshot's primary functions bound to the Print Screen key on i3 and Sway, add the following
+to your `config` file in `~/.config/i3` and/or `~/.config/sway` respectively:
+
+```
+bindsym Print exec --no-startup-id "nextshot -f"
+bindsym Mod4+Print exec --no-startup-id "nextshot -w"
+bindsym Shift+Print exec --no-startup-id "nextshot -a"
+
+bindsym Ctrl+Print exec --no-startup-id "nextshot -fc"
+bindsym Ctrl+Mod4+Print exec --no-startup-id "nextshot -wc"
+bindsym Ctrl+Shift+Print exec --no-startup-id "nextshot -ac"
+```
+
+These bindings will have `PrtScr` capture the full screen, `Shift+PrtScr` capture an area, and
+`Super+PrtScr` capture a window—each uploading automatically to Nextcloud and copying the
+share link to your clipboard.
+
+When combined with `ctrl`, the raw image will be copied to clipboard instead of uploading to Nextcloud.
 
 ## Usage
 
@@ -125,31 +140,10 @@ If you have Yad installed, you can use Nextshot via its tray icon. A normal clic
 trigger Nextshot's [`--area`](#screenshot-modes) screenshot mode, while right clicking
 will open a menu with quick access to most of Nextshot's functions.
 
-![Preview of Nextshot tray menu](tray.png)
+![Preview of Nextshot tray menu](resources/tray.png)
 
 The Nextshot tray menu can be started with `nextshot -t`, which you can add to `.xinitrc`
 or your i3/Sway config to have it automatically started when you login.
-
-### Recommended Shortcuts
-
-To have Nextshot's primary functions bound to the Print Screen key on i3 and Sway, add the following
-to your `config` file in `~/.config/i3` and/or `~/.config/sway` respectively:
-
-```
-bindsym Print exec --no-startup-id "nextshot -f"
-bindsym Mod4+Print exec --no-startup-id "nextshot -w"
-bindsym Shift+Print exec --no-startup-id "nextshot -a"
-
-bindsym Ctrl+Print exec --no-startup-id "nextshot -fc"
-bindsym Ctrl+Mod4+Print exec --no-startup-id "nextshot -wc"
-bindsym Ctrl+Shift+Print exec --no-startup-id "nextshot -ac"
-```
-
-These bindings will have `PrtScr` capture the full screen, `Shift+PrtScr` capture an area, and
-`Super+PrtScr` capture a window - each uploading automatically to Nextcloud and copying the
-share link to your clipboard.
-
-When combined with `ctrl`, the raw image will be copied to clipboard instead of uploading to Nextcloud.
 
 ## Configuration
 
@@ -278,14 +272,31 @@ Likewise if you're running from X11 but Nextshot detects Wayland, you can set `-
 
 There was a bug introduced to Yad in v1.0 that breaks context menus in the tray icons it creates.
 
-This issue was fixed in [v1cont/yad@06de51c], but at this time is unreleased. Users of Arch-based distros can install `yad-git`
-from the AUR which will grab the latest commit. On other distros, manually build and install Yad from the master branch.
-
-The other option is reverting to v0.42.1 (the latest version pre-1.0) until a new version is released, but this isn't advised.
+This issue was fixed in [v1cont/yad@06de51c][2], which was released as part of Yad v5.0. If you're still running an older version,
+update to v5 or greater and the tray menu will be working again. If you still have problems, please create an issue.
 
 
 ## Known Issues
 
 * [Tray icon is currently unavailable on Wayland](https://github.com/dshoreman/nextshot/issues/48)
 
-[v1cont/yad@06de51c]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
+
+## Contributing
+
+If you find Nextshot useful and would like to contribute, there are a few ways you can help:
+* Vote for the [nextshot package][1] on the AUR
+* [Report any bugs][3] you find while using Nextshot
+* Submit a feature request if there's something you'd like added
+* Send a PR if you know some Bash! Check the [open issues][3] for ideas
+* Finally, donate via [PayPal] or [Liberapay] (but only if you can afford to)
+
+---
+
+*Nextshot camera icon provided by [Icons8][4].*
+
+[PayPal]: https://paypal.me/dshoreman
+[Liberapay]: https://liberapay.com/dshoreman
+[1]: https://aur.archlinux.org/packages/nextshot/
+[2]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
+[3]: https://github.com/dshoreman/nextshot/issues
+[4]: https://icons8.com

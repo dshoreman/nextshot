@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.2.4"
+readonly _VERSION="1.3.0"
 
 usage() {
     echo "Usage:"
@@ -42,6 +42,7 @@ usage() {
     echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
+    edho "  --prune-cache     Clean up the screenshot cache"
     echo "  -v, --verbose     Enable verbose output for debugging"
     echo "  -V, --version     Output version information and exit"
     echo
@@ -135,9 +136,9 @@ Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
-Quit Nextshot       ! kill $traypid       !Quit!application-exit" >&3
+Quit Nextshot       ! kill $traypid       !application-exit" >&3
 
-    echo "icon:camera-photo-symbolic" >&3
+    echo "icon:nextshot-16x16" >&3
     echo "tooltip:Nextshot" >&3
 }
 
@@ -172,7 +173,7 @@ setup() {
 
 parse_opts() {
     local -r OPTS=D::htvVawd:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -213,6 +214,8 @@ parse_opts() {
                 fi
 
                 tray_menu && exit 0 ;;
+            --prune-cache)
+                prune_cache && exit 0 ;;
             -v|--verbose)
                 debug=true; echo "Debug mode enabled"; shift ;;
             -V|--version)
@@ -280,6 +283,36 @@ parse_environment() {
     if [ $debug = true ]; then
         echo "Environment $method set to ${NEXTSHOT_ENV}"
     fi
+}
+
+prune_cache() {
+    local files response count=0 size
+
+    echo "Checking for cached screenshots more than 30 days old..."
+    files="$(find "$_CACHE_DIR" -maxdepth 1 -iname '20*-*-* *.*.*.png' -mtime +30)"
+
+    if [[ "${files}" == "" ]]; then
+        echo "[32;1mLooks like the cache is clean![0m"
+        echo "Nothing to do, exiting."
+        exit
+    fi
+
+    count=$(echo "${files}" | wc -l)
+    size=$(echo "${files}" | xargs -d '\n' du -ch | grep total$ | cut -f1)
+
+    echo "[33;1mFound ${count} cached images to delete, totalling ${size}![0m"
+
+    read -rp "Continue? [yN] " response
+    echo
+
+    if [[ ! "${response,,}" =~ ^(y|yes)$ ]]; then
+        echo "Cleanup aborted." && exit 1
+    fi
+
+    echo -e "PRUNING! Please wait...\n"
+    echo "${files}" | xargs -d '\n' rm -v \
+        && echo "[32;1mCache pruning complete![0m" \
+        || echo "[31;1mCould not remove some files. Try again?[0m"
 }
 
 delay_capture() {
@@ -400,6 +433,8 @@ to_clipboard() {
     [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
 
     if is_wayland; then wl-copy -t $mime
+    elif [ "${mime}" == "text/plain" ]; then
+        xclip -selection clipboard
     else
         xclip -selection clipboard -t $mime
     fi
@@ -659,7 +694,7 @@ config_gui() {
 Seems this is your first time running this thing.
 Fill out the options below and you'll be taking screenshots in no time:\n" \
         --image="preferences-other" --borders=10 --fixed --quoted-output --form \
-        --button="Quit!application-exit:1" --button="OK!gtk-ok:0" \
+        --button="Quit!application-exit:1" --button="Continue!go-next:0" \
         --field="NextCloud Server URL" \
         --field="The root URL of your Nextcloud installation, e.g. https://nc.mydomain.com\n:LBL" \
         --field="Username" \
@@ -681,7 +716,7 @@ and click <b>Create new app password</b>.\n:LBL" \
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --button="Cancel!gtk-cancel:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
+        --button="Cancel!window-close:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
         "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     echo -e "${config}" > "$_CONFIG_FILE"
