@@ -42,7 +42,7 @@ usage() {
     echo "  --env=ENV         Override environment detection"
     echo "  -h, --help        Display this help and exit"
     echo "  -t, --tray        Start the NextShot tray menu"
-    edho "  --prune-cache     Clean up the screenshot cache"
+    echo "  --prune-cache     Clean up the screenshot cache"
     echo "  -v, --verbose     Enable verbose output for debugging"
     echo "  -V, --version     Output version information and exit"
     echo
