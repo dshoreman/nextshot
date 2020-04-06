@@ -340,11 +340,11 @@ is_wayland_detected() {
 }
 
 int2dec() {
-    printf '%.2f' "$(echo "$1 / 255" | bc -l)"
+    LC_NUMERIC=C printf '%.2f' "$(echo "$1 / 255" | bc -l)"
 }
 
 int2hex() {
-    printf '%02x\n' "$1"
+    LC_NUMERIC=C printf '%02x\n' "$1"
 }
 
 make_url() {
