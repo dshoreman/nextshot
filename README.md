@@ -222,6 +222,15 @@ Defaults to `false`
 
 ---
 
+#### `format` - optional
+
+Set the default image format and file extension for saving screenshots.  
+Supported values are `png`, `jpg` or `jpeg`.
+
+Defaults to `png`.
+
+---
+
 #### `rename` - optional
 
 When you set this option to `true`, Nextshot will prompt you to enter a custom filename before

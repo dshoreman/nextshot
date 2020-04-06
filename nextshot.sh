@@ -430,7 +430,9 @@ from_clipboard() {
 to_clipboard() {
     local mime
 
-    [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
+    [ "${1:-text}" = "image" ] && (
+        [[ "${format}" =~ ^jpe?g$ ]] && mime="image/jpeg" || mime="image/png"
+    ) || mime="text/plain"
 
     if is_wayland; then wl-copy -t $mime
     elif [ "${mime}" == "text/plain" ]; then
@@ -449,6 +451,7 @@ load_config() {
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
     [ $debug = true ] && echo "Uploading to /${savedir} as ${username} on Nextcloud instance ${server}"
 
+    format="${format:-png}"
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
     link_previews=${link_previews,,}
@@ -459,6 +462,7 @@ load_config() {
     if [ $debug = true ]; then
         echo -e "\nParsed config:"
         echo "  delay: ${delay}"
+        echo "  format: ${format}"
         echo "  rename: ${rename}"
         echo "  hlColour: ${hlColour}"
         echo -e "  link_previews: ${link_previews}\n"
@@ -495,7 +499,7 @@ cache_image() {
 take_screenshot() {
     local filename filepath shoot
 
-    filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    filename="$(date "+%Y-%m-%d %H.%M.%S").${format}"
     filepath="$_CACHE_DIR/$filename"
 
     if [ "$mode" = "clipboard" ]; then
@@ -517,6 +521,12 @@ shoot_wayland() {
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
     elif [ "$mode" = "window" ]; then
         args=(-g "$(select_window)")
+    fi
+
+    if [[ "${format}" =~ ^jpe?g$ ]]; then
+        args+=(-t jpeg)
+    else
+        args+=(-t png)
     fi
 
     delay_capture
