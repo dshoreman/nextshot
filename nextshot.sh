@@ -441,12 +441,13 @@ to_clipboard() {
 }
 
 load_config() {
-    [ $debug = true ] && echo "Loading config from $_CONFIG_FILE..."
+    [ $debug = true ] && echo -e "\nLoading config from $_CONFIG_FILE..."
     # shellcheck disable=SC1090
     . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
+    [ $debug = true ] && echo "Uploading to /${savedir} as ${username} on Nextcloud instance ${server}"
 
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
@@ -456,7 +457,11 @@ load_config() {
     delay=${delay:-0}
 
     if [ $debug = true ]; then
-        echo "Config loaded!"
+        echo -e "\nParsed config:"
+        echo "  delay: ${delay}"
+        echo "  rename: ${rename}"
+        echo "  hlColour: ${hlColour}"
+        echo -e "  link_previews: ${link_previews}\n"
     fi
 }
 
