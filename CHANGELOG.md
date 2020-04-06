@@ -9,7 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.3.2] - 2020-04-06
+### Fixed
+* Printf no longer fails with non-dot decimal separators in locale
+
+
 ## [1.3.1] - 2019-12-31
+### Fixed
+* Bad echo in the `usage` function
 
 
 ## [1.3.0] - 2019-12-31
@@ -198,7 +205,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.3.1...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.3.2...develop
+[1.3.2]: https://github.com/dshoreman/nextshot/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/dshoreman/nextshot/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/dshoreman/nextshot/compare/v1.2.4...v1.3.0
 [1.2.4]: https://github.com/dshoreman/nextshot/compare/v1.2.3...v1.2.4

@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.3.1"
+readonly _VERSION="1.3.2"
 
 usage() {
     echo "Usage:"
@@ -340,11 +340,11 @@ is_wayland_detected() {
 }
 
 int2dec() {
-    printf '%.2f' "$(echo "$1 / 255" | bc -l)"
+    LC_NUMERIC=C printf '%.2f' "$(echo "$1 / 255" | bc -l)"
 }
 
 int2hex() {
-    printf '%02x\n' "$1"
+    LC_NUMERIC=C printf '%02x\n' "$1"
 }
 
 make_url() {
