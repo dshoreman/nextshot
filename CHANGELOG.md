@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [1.3.1] - 2019-12-31
+### Fixed
+* Bad echo in the `usage` function
 
 
 ## [1.3.0] - 2019-12-31
