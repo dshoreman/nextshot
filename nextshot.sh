@@ -230,7 +230,11 @@ parse_opts() {
             -d|--delay)
                 delay=${2//=}; shift 2 ;;
             -F|--format)
-                format=${2//=}; shift 2 ;;
+                cliFormat=${2//=}
+                if ! [[ "${cliFormat}" =~ ^png|jpe?g$ ]]; then
+                    echo "WARNING: Invalid image format '${cliFormat}', default will be set from config."
+                fi
+                shift 2 ;;
             --file)
                 local mimetype
 
@@ -454,13 +458,18 @@ load_config() {
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
     [ $debug = true ] && echo "Uploading to /${savedir} as ${username} on Nextcloud instance ${server}"
 
-    format="${format:-png}"
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
     link_previews=${link_previews,,}
     rename=${rename:-false}
     rename=${rename,,}
     delay=${delay:-0}
+
+    if [[ "${cliFormat}" =~ png|jpe?g$ ]]; then
+        format="${cliFormat}"
+    else
+        [[ "${format}" =~ ^png|jpe?g$ ]] || format="png"
+    fi
 
     if [ $debug = true ]; then
         echo -e "\nParsed config:"
