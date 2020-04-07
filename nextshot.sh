@@ -231,7 +231,7 @@ parse_opts() {
                 delay=${2//=}; shift 2 ;;
             -F|--format)
                 cliFormat=${2//=}
-                if ! [[ "${cliFormat}" =~ ^png|jpe?g$ ]]; then
+                if ! is_format "${cliFormat}"; then
                     echo "WARNING: Invalid image format '${cliFormat}', default will be set from config."
                 fi
                 shift 2 ;;
@@ -336,6 +336,10 @@ has() {
 # shellcheck disable=SC2009
 is_interactive() {
     ps -o stat= -p $$ | grep -q '+'
+}
+
+is_format() {
+    [[ "${1,,}" =~ ^png|jpe?g$ ]]
 }
 
 is_wayland() {
@@ -465,10 +469,10 @@ load_config() {
     rename=${rename,,}
     delay=${delay:-0}
 
-    if [[ "${cliFormat}" =~ png|jpe?g$ ]]; then
-        format="${cliFormat}"
+    if is_format "${cliFormat}"; then
+        format="${cliFormat,,}"
     else
-        [[ "${format}" =~ ^png|jpe?g$ ]] || format="png"
+        is_format "${format}" && format="${format,,}" || format="png"
     fi
 
     if [ $debug = true ]; then
