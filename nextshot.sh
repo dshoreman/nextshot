@@ -55,6 +55,7 @@ usage() {
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
     echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
+    echo "  -F, --format=FMT  Save image as FMT instead of the default"
     echo
     echo "Upload Modes:"
     echo
@@ -172,8 +173,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htvVawd:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVawd:F:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -228,6 +229,12 @@ parse_opts() {
                 mode="window"; shift ;;
             -d|--delay)
                 delay=${2//=}; shift 2 ;;
+            -F|--format)
+                cliFormat=${2//=}
+                if ! is_format "${cliFormat}"; then
+                    echo "WARNING: Invalid image format '${cliFormat}', default will be set from config."
+                fi
+                shift 2 ;;
             --file)
                 local mimetype
 
@@ -331,6 +338,14 @@ is_interactive() {
     ps -o stat= -p $$ | grep -q '+'
 }
 
+is_format() {
+    [[ "${1,,}" =~ ^png|jpe?g$ ]]
+}
+
+is_jpeg() {
+    [[ "${format}" =~ ^jpe?g$ ]]
+}
+
 is_wayland() {
     [ "$NEXTSHOT_ENV" = "wayland" ]
 }
@@ -430,7 +445,9 @@ from_clipboard() {
 to_clipboard() {
     local mime
 
-    [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
+    [ "${1:-text}" = "image" ] && (
+        is_jpeg && mime="image/jpeg" || mime="image/png"
+    ) || mime="text/plain"
 
     if is_wayland; then wl-copy -t $mime
     elif [ "${mime}" == "text/plain" ]; then
@@ -456,9 +473,16 @@ load_config() {
     rename=${rename,,}
     delay=${delay:-0}
 
+    if is_format "${cliFormat}"; then
+        format="${cliFormat,,}"
+    else
+        is_format "${format}" && format="${format,,}" || format="png"
+    fi
+
     if [ $debug = true ]; then
         echo -e "\nParsed config:"
         echo "  delay: ${delay}"
+        echo "  format: ${format}"
         echo "  rename: ${rename}"
         echo "  hlColour: ${hlColour}"
         echo -e "  link_previews: ${link_previews}\n"
@@ -495,7 +519,7 @@ cache_image() {
 take_screenshot() {
     local filename filepath shoot
 
-    filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    filename="$(date "+%Y-%m-%d %H.%M.%S").${format}"
     filepath="$_CACHE_DIR/$filename"
 
     if [ "$mode" = "clipboard" ]; then
@@ -518,6 +542,8 @@ shoot_wayland() {
     elif [ "$mode" = "window" ]; then
         args=(-g "$(select_window)")
     fi
+
+    is_jpeg && args+=(-t jpeg) || args+=(-t png)
 
     delay_capture
     grim "${args[@]}" "$1"

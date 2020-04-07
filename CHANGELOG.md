@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
 * Active config values are now shown as part of verbose output
+* File extension can now be set with `format` in config and/or at runtime
 
 
 ## [1.3.2] - 2020-04-06
