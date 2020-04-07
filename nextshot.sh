@@ -342,6 +342,10 @@ is_format() {
     [[ "${1,,}" =~ ^png|jpe?g$ ]]
 }
 
+is_jpeg() {
+    [[ "${format}" =~ ^jpe?g$ ]]
+}
+
 is_wayland() {
     [ "$NEXTSHOT_ENV" = "wayland" ]
 }
@@ -442,7 +446,7 @@ to_clipboard() {
     local mime
 
     [ "${1:-text}" = "image" ] && (
-        [[ "${format}" =~ ^jpe?g$ ]] && mime="image/jpeg" || mime="image/png"
+        is_jpeg && mime="image/jpeg" || mime="image/png"
     ) || mime="text/plain"
 
     if is_wayland; then wl-copy -t $mime
@@ -539,11 +543,7 @@ shoot_wayland() {
         args=(-g "$(select_window)")
     fi
 
-    if [[ "${format}" =~ ^jpe?g$ ]]; then
-        args+=(-t jpeg)
-    else
-        args+=(-t png)
-    fi
+    is_jpeg && args+=(-t jpeg) || args+=(-t png)
 
     delay_capture
     grim "${args[@]}" "$1"
