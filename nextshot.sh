@@ -55,6 +55,7 @@ usage() {
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
     echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
+    echo "  -F, --format=FMT  Save image as FMT instead of the default"
     echo
     echo "Upload Modes:"
     echo
@@ -172,8 +173,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htvVawd:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVawd:F:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -228,6 +229,8 @@ parse_opts() {
                 mode="window"; shift ;;
             -d|--delay)
                 delay=${2//=}; shift 2 ;;
+            -F|--format)
+                format=${2//=}; shift 2 ;;
             --file)
                 local mimetype
 
