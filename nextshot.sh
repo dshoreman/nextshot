@@ -540,7 +540,7 @@ shoot_wayland() {
     if [ "$mode" = "selection" ]; then
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
     elif [ "$mode" = "window" ]; then
-        windows="$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
+        windows="$(swaymsg -t get_tree | jq -r '.. | select(.visible? and .pid?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
     fi
 

@@ -14,6 +14,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 * Window selection on Sway is now via Slurp instead of a list
 
+### Fixed
+* Floating windows weren't able to be selected on Sway
+
 
 ## [1.3.2] - 2020-04-06
 ### Fixed
