@@ -535,12 +535,13 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    local args
+    local args windows
 
     if [ "$mode" = "selection" ]; then
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
     elif [ "$mode" = "window" ]; then
-        args=(-g "$(select_window)")
+        windows="$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
+        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
     fi
 
     is_jpeg && args+=(-t jpeg) || args+=(-t png)
@@ -634,64 +635,6 @@ nc_share() {
     fi
 
     echo "$json"
-}
-
-select_window() {
-    local windows window choice num max size offset geometries title titles yadlist
-
-    windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
-    geometries=()
-    yadlist=()
-    titles=()
-
-    echo "Found the following visible windows:" >&2
-    num=0
-    while read -r window; do
-        read -r offset size title <<< "$window"
-        geometries+=("$offset $size")
-        titles+=("$title")
-
-        if is_interactive; then
-            echo "[$num] $title" >&2
-        else
-            yadlist+=("$num" "$title" "$size")
-        fi
-        ((num+=1))
-    done <<< "$windows"
-
-    if is_interactive; then
-        select_window_cli
-    elif has yad; then
-        select_window_gui
-    else
-        echo "Unable to display window selection. Install Yad or run 'nextshot -w' in a terminal." >&2
-        exit 1
-    fi
-
-    echo "Selected window $choice: ${titles[$choice]}" >&2
-    echo "${geometries[$choice]}"
-}
-
-select_window_cli() {
-    ((max="$num-1"))
-    choice=-1
-
-    while [ $choice -lt 0 ] || [ $choice -gt $max ]; do
-        read -r -p "Which window to capture [0-$max]? " choice
-
-        if [ -z "$choice" ] || ! [[ "$choice" =~ ^[0-9]+$ ]]; then
-            echo "Invalid selection. Enter a number between 0 and $max" >&2
-            choice=-1
-        fi
-    done
-}
-
-select_window_gui() {
-    choice=$(yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
-        --width=550 --height=400 --title"NextShot: Select window to capture" \
-        --column="Window Title" --column="Dimensions" "${yadlist[@]}") || \
-        (echo "Window selection cancelled by user." >&2; exit 1)
-    choice=${choice//|}
 }
 
 send_notification() {

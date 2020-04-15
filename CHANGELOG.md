@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Active config values are now shown as part of verbose output
 * File extension can now be set with `format` in config and/or at runtime
 
+### Changed
+* Window selection on Sway is now via Slurp instead of a list
+
 
 ## [1.3.2] - 2020-04-06
 ### Fixed
