@@ -363,13 +363,16 @@ int2hex() {
 }
 
 make_url() {
-    local json suffix; read -r json
+    local json prefix suffix; read -r json
 
     if $link_previews; then
         suffix=/preview
     fi
+    if ! $pretty_urls; then
+        prefix=/index.php
+    fi
 
-    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
+    echo "${server}${prefix}/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
 }
 
 status_check() {
@@ -469,6 +472,8 @@ load_config() {
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
     link_previews=${link_previews,,}
+    pretty_urls=${pretty_urls:-true}
+    pretty_urls=${pretty_urls,,}
     rename=${rename:-false}
     rename=${rename,,}
     delay=${delay:-0}

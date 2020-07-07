@@ -220,6 +220,16 @@ clicking the link will take you directly to the full-size image rather than Next
 
 Defaults to `false`
 
+
+---
+
+#### `pretty_urls` - optional
+
+When disabled (set to `false`), this will insert `/index.php` in share links, after the Server URL.  
+Leave this set to `true` (enabled) if your Nextcloud server has Pretty URLs enabled.
+
+Defaults to `true`
+
 ---
 
 #### `format` - optional
