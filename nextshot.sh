@@ -122,7 +122,11 @@ tray_menu() {
         exit 1
     fi
 
-    load_config && local files_url="$server/apps/files/?dir=/$savedir"
+    load_config && local files_url prefix
+    if ! $pretty_urls; then
+        prefix=/index.php
+    fi
+    files_url="${server}${prefix}/apps/files/?dir=/${savedir}"
 
     echo "Starting Nextshot tray menu..." >&2
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
@@ -599,7 +603,7 @@ rename_gui() {
 }
 
 nc_upload() {
-    local filename output respCode reqUrl url; read -r filename
+    local filename output respCode reqUrl prefix url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
@@ -619,7 +623,10 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
-    url="$server/apps/gallery/#${savedir}/$filename"
+    if ! $pretty_urls; then
+        prefix=/index.php
+    fi
+    url="${server}${prefix}/apps/gallery/#${savedir}/$filename"
     echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
