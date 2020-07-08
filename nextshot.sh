@@ -109,7 +109,7 @@ nextshot() {
         filename="$(echo "$image" | nc_upload)"
 
         json=$(nc_share "$filename")
-        url="$(echo "$json" | make_url)"
+        url="$(echo "$json" | make_share_url)"
 
         echo "$url" | to_clipboard && send_notification
     fi
@@ -122,14 +122,14 @@ tray_menu() {
         exit 1
     fi
 
-    load_config && local files_url="$server/apps/files/?dir=/$savedir"
-
+    load_config
     echo "Starting Nextshot tray menu..." >&2
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
 
     yad --notification --listen --no-middle --command="nextshot -a" <&3 &
-    local traypid=$!
+    local files_url traypid=$!
     echo $traypid > "$_RUNTIME_DIR/traymenu.pid"
+    files_url="$(make_url "/apps/files/?dir=/${savedir}")"
 
     echo "menu:\
 Open Nextcloud      ! xdg-open $files_url !emblem-web||\
@@ -362,14 +362,24 @@ int2hex() {
     LC_NUMERIC=C printf '%02x\n' "$1"
 }
 
-make_url() {
+make_share_url() {
     local json suffix; read -r json
 
     if $link_previews; then
         suffix=/preview
     fi
+    make_url "/s/$(echo "${json}" | jq -r '.ocs.data.token')${suffix}"
+}
 
-    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
+make_url() {
+    local path="$*";
+    if ! [ "${path:0:1}" = "/" ]; then
+        echo "${server}/${path}"
+        return
+    fi
+
+    $pretty_urls && echo "${server}${*}" \
+        || echo "${server}/index.php${*}"
 }
 
 status_check() {
@@ -469,6 +479,8 @@ load_config() {
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
     link_previews=${link_previews,,}
+    pretty_urls=${pretty_urls:-true}
+    pretty_urls=${pretty_urls,,}
     rename=${rename:-false}
     rename=${rename,,}
     delay=${delay:-0}
@@ -485,7 +497,8 @@ load_config() {
         echo "  format: ${format}"
         echo "  rename: ${rename}"
         echo "  hlColour: ${hlColour}"
-        echo -e "  link_previews: ${link_previews}\n"
+        echo "  link_previews: ${link_previews}"
+        echo -e "  pretty_urls: ${pretty_urls}\n"
     fi
 }
 
@@ -598,7 +611,7 @@ nc_upload() {
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$server/remote.php/dav/files/$username/$savedir/${filename// /%20}"
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${filename// /%20}")"
     [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     [ $debug = true ] && echo "Sending request to ${reqUrl}..." >&2
 
@@ -614,7 +627,7 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
-    url="$server/apps/gallery/#${savedir}/$filename"
+    url="$(make_url "/apps/gallery/#${savedir}/${filename}")"
     echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
@@ -624,7 +637,7 @@ nc_share() {
     [ $debug = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
     respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
-        "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
+        "$(make_url "ocs/v2.php/apps/files_sharing/api/v1/shares?format=json")" \
         -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
 
     json="$(<"$_CACHE_DIR/share.json")"
@@ -676,22 +689,26 @@ Fill out the options below and you'll be taking screenshots in no time:\n" \
         --field="To generate an App Password, open your Nextcloud instance.
 Under <b>Settings > Personal > Security</b>, enter <i>\"NextShot\"</i> for the App name
 and click <b>Create new app password</b>.\n:LBL" \
+        --field="Enable Pretty URLs:CHK" \
+        --field="When disabled, 'index.php' will be added to links that need it.\n:LBL" \
         --field="Link direct to image instead of Nextcloud UI (appends '/preview'):CHK" \
         --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" false true "Screenshots") || config_abort
+        "https://" "" "" "" "" true "" false true "Screenshots") || config_abort
 
-    IFS='|' read -r server _ username password _ link_previews rename savedir _ <<< "$response"
+    IFS='|' read -r server _ username password _ pretty_urls _ link_previews rename savedir _ <<< "$response"
     link_previews=${link_previews//\'/}
     link_previews=${link_previews,,}
+    pretty_urls=${pretty_urls//\'/}
+    pretty_urls=${pretty_urls,,}
     rename=${rename//\'/}
     rename=${rename,,}
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --button="Cancel!window-close:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
-        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
+        --button="Cancel!window-close:1" --button="Save!document-save:0" --width=400 --height=185 --form --field=":TXT" \
+        "server=$server\nusername=$username\npassword=$password\npretty_urls=$pretty_urls\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     echo -e "${config}" > "$_CONFIG_FILE"
 }
@@ -726,6 +743,10 @@ username=''
 
 # Nextcloud App Password created specifically for NextShot (Settings > Personal > Security)
 password=''
+
+# Does your server have Pretty URLs enabled?
+#  Set this to false if links include 'index.php'
+pretty_urls=true
 
 # Folder on Nextcloud where screenshots will be uploaded (must already exist)
 savedir=''
