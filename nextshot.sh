@@ -136,6 +136,7 @@ tray_menu() {
 Open Nextcloud      ! xdg-open $files_url !emblem-web||\
 Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
+Capture monitor     ! nextshot -m         !display|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
 Quit Nextshot       ! kill $traypid       !application-exit" >&3
@@ -575,7 +576,7 @@ shoot_x() {
         args=(-window root)
     elif [ "$mode" = "monitor" ]; then
         echo "Selection set to curent display" >&2
-        local mouse mouseX mouseY monitors
+        local mouse mouseX mouseY monitors geometry
 
         # Find current cursor position
         mouse="$(xdotool getmouselocation)"
@@ -607,9 +608,12 @@ shoot_x() {
                 continue
             fi
 
+            geometry="${monW}x${monH}+${monX}+${monY}"
             [ $debug = true ] && echo "Found active monitor: ${monN}" >&2
             break
         done
+
+        args=(-window root -crop "$geometry")
     elif [ "$mode" = "selection" ]; then
         args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
