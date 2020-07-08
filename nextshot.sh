@@ -372,11 +372,14 @@ make_share_url() {
 }
 
 make_url() {
-    if [ "${*:0:1}" = "/" ] && ! $pretty_urls; then
-        echo "${server}/index.php${*}"
-    else
-        echo "${server}/${*}"
+    local path="$*";
+    if ! [ "${path:0:1}" = "/" ]; then
+        echo "${server}/${path}"
+        return
     fi
+
+    $pretty_urls && echo "${server}${*}" \
+        || echo "${server}/index.php${*}"
 }
 
 status_check() {
