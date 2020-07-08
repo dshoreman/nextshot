@@ -575,11 +575,19 @@ shoot_x() {
         args=(-window root)
     elif [ "$mode" = "monitor" ]; then
         echo "Selection set to curent display" >&2
-        local monitors
+        local mouse mouseX mouseY monitors
 
+        # Find current cursor position
+        mouse="$(xdotool getmouselocation)"
+        mouseX=$(echo "${mouse}" | awk -F "[: ]" '{print $2}')
+        mouseY=$(echo "${mouse}" | awk -F "[: ]" '{print $4}')
+        [ $debug = true ] && echo "Cursor position: ${mouseX}x${mouseY}" >&2
+
+        # Grab active output positions and sizes
         monitors=$(i3-msg -t get_outputs | jq -r \
             '.[] | select(.active) | {name} + .rect | "\(.width)x\(.height)+\(.x)+\(.y)+\(.name)"')
 
+        # Detect which output cursor x/y is in
         for monitor in ${monitors}; do
             local monW monH monX monY
             monW=$(echo "${monitor}" | awk -F "[x+]" '{print $1}')
@@ -589,6 +597,18 @@ shoot_x() {
             monN=$(echo "${monitor}" | awk -F "[x+]" '{print $5}')
 
             [ $debug = true ] && echo "Discovered monitor ${monN}: ${monW}x${monH}px @ ${monX}x${monY}" >&2
+
+            if (( mouseX < monX )) || (( mouseX > monX+monW )); then
+                [ $debug = true ] && echo "Cursor Xpos out of bounds of ${monN}!" >&2
+                continue
+            fi
+            if (( mouseY < monY )) || (( mouseY > monY+monH )); then
+                [ $debug = true ] && echo "Cursor Ypos out of bounds of ${monN}" >&2
+                continue
+            fi
+
+            [ $debug = true ] && echo "Found active monitor: ${monN}" >&2
+            break
         done
     elif [ "$mode" = "selection" ]; then
         args=(-window root -crop "$($slop -f "%g" -t 0)")
