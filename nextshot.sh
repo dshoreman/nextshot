@@ -52,6 +52,7 @@ usage() {
     echo " NextShot automatically upload it to Nextcloud."
     echo
     echo "  -a, --area        Capture only the selected area"
+    echo "  -m, --monitor     Capture only the active monitor"
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
     echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
@@ -173,8 +174,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htvVawd:F:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVamwd:F:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,monitor,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -225,6 +226,8 @@ parse_opts() {
                 mode="selection"; shift ;;
             -f|--fullscreen)
                 mode="fullscreen"; shift ;;
+            -m|--monitor)
+                mode="monitor"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
             -d|--delay)
@@ -570,6 +573,23 @@ shoot_x() {
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
+    elif [ "$mode" = "monitor" ]; then
+        echo "Selection set to curent display" >&2
+        local monitors
+
+        monitors=$(i3-msg -t get_outputs | jq -r \
+            '.[] | select(.active) | {name} + .rect | "\(.width)x\(.height)+\(.x)+\(.y)+\(.name)"')
+
+        for monitor in ${monitors}; do
+            local monW monH monX monY
+            monW=$(echo "${monitor}" | awk -F "[x+]" '{print $1}')
+            monH=$(echo "${monitor}" | awk -F "[x+]" '{print $2}')
+            monX=$(echo "${monitor}" | awk -F "[x+]" '{print $3}')
+            monY=$(echo "${monitor}" | awk -F "[x+]" '{print $4}')
+            monN=$(echo "${monitor}" | awk -F "[x+]" '{print $5}')
+
+            [ $debug = true ] && echo "Discovered monitor ${monN}: ${monW}x${monH}px @ ${monX}x${monY}" >&2
+        done
     elif [ "$mode" = "selection" ]; then
         args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
