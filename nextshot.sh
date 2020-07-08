@@ -109,7 +109,7 @@ nextshot() {
         filename="$(echo "$image" | nc_upload)"
 
         json=$(nc_share "$filename")
-        url="$(echo "$json" | make_url)"
+        url="$(echo "$json" | make_share_url)"
 
         echo "$url" | to_clipboard && send_notification
     fi
@@ -122,18 +122,14 @@ tray_menu() {
         exit 1
     fi
 
-    load_config && local files_url prefix
-    if ! $pretty_urls; then
-        prefix=/index.php
-    fi
-    files_url="${server}${prefix}/apps/files/?dir=/${savedir}"
-
+    load_config
     echo "Starting Nextshot tray menu..." >&2
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
 
     yad --notification --listen --no-middle --command="nextshot -a" <&3 &
-    local traypid=$!
+    local files_url traypid=$!
     echo $traypid > "$_RUNTIME_DIR/traymenu.pid"
+    files_url="$(make_url "/apps/files/?dir=/${savedir}")"
 
     echo "menu:\
 Open Nextcloud      ! xdg-open $files_url !emblem-web||\
@@ -366,17 +362,21 @@ int2hex() {
     LC_NUMERIC=C printf '%02x\n' "$1"
 }
 
-make_url() {
-    local json prefix suffix; read -r json
+make_share_url() {
+    local json suffix; read -r json
 
     if $link_previews; then
         suffix=/preview
     fi
-    if ! $pretty_urls; then
-        prefix=/index.php
-    fi
+    make_url "/s/$(echo "${json}" | jq -r '.ocs.data.token')${suffix}"
+}
 
-    echo "${server}${prefix}/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
+make_url() {
+    if [ "${*:0:1}" = "/" ] && ! $pretty_urls; then
+        echo "${server}/index.php${*}"
+    else
+        echo "${server}/${*}"
+    fi
 }
 
 status_check() {
@@ -603,11 +603,11 @@ rename_gui() {
 }
 
 nc_upload() {
-    local filename output respCode reqUrl prefix url; read -r filename
+    local filename output respCode reqUrl url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$server/remote.php/dav/files/$username/$savedir/${filename// /%20}"
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${filename// /%20}")"
     [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     [ $debug = true ] && echo "Sending request to ${reqUrl}..." >&2
 
@@ -623,10 +623,7 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
-    if ! $pretty_urls; then
-        prefix=/index.php
-    fi
-    url="${server}${prefix}/apps/gallery/#${savedir}/$filename"
+    url="$(make_url "/apps/gallery/#${savedir}/${filename}")"
     echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
@@ -636,7 +633,7 @@ nc_share() {
     [ $debug = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
     respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
-        "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
+        "$(make_url "ocs/v2.php/apps/files_sharing/api/v1/shares?format=json")" \
         -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
 
     json="$(<"$_CACHE_DIR/share.json")"
