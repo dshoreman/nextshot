@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.3.2"
+readonly _VERSION="1.4.0"
 
 usage() {
     echo "Usage:"
@@ -52,9 +52,11 @@ usage() {
     echo " NextShot automatically upload it to Nextcloud."
     echo
     echo "  -a, --area        Capture only the selected area"
+    echo "  -m, --monitor     Capture only the active monitor"
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
     echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
+    echo "  -F, --format=FMT  Save image as FMT instead of the default"
     echo
     echo "Upload Modes:"
     echo
@@ -108,7 +110,7 @@ nextshot() {
         filename="$(echo "$image" | nc_upload)"
 
         json=$(nc_share "$filename")
-        url="$(echo "$json" | make_url)"
+        url="$(echo "$json" | make_share_url)"
 
         echo "$url" | to_clipboard && send_notification
     fi
@@ -121,19 +123,20 @@ tray_menu() {
         exit 1
     fi
 
-    load_config && local files_url="$server/apps/files/?dir=/$savedir"
-
+    load_config
     echo "Starting Nextshot tray menu..." >&2
     rm -f "$_TRAY_FIFO"; mkfifo "$_TRAY_FIFO" && exec 3<> "$_TRAY_FIFO"
 
     yad --notification --listen --no-middle --command="nextshot -a" <&3 &
-    local traypid=$!
+    local files_url traypid=$!
     echo $traypid > "$_RUNTIME_DIR/traymenu.pid"
+    files_url="$(make_url "/apps/files/?dir=/${savedir}")"
 
     echo "menu:\
 Open Nextcloud      ! xdg-open $files_url !emblem-web||\
 Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
+Capture monitor     ! nextshot -m         !display|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
 Quit Nextshot       ! kill $traypid       !application-exit" >&3
@@ -172,8 +175,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htvVawd:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVamwd:F:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,monitor,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -224,10 +227,18 @@ parse_opts() {
                 mode="selection"; shift ;;
             -f|--fullscreen)
                 mode="fullscreen"; shift ;;
+            -m|--monitor)
+                mode="monitor"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
             -d|--delay)
                 delay=${2//=}; shift 2 ;;
+            -F|--format)
+                cliFormat=${2//=}
+                if ! is_format "${cliFormat}"; then
+                    echo "WARNING: Invalid image format '${cliFormat}', default will be set from config."
+                fi
+                shift 2 ;;
             --file)
                 local mimetype
 
@@ -331,6 +342,14 @@ is_interactive() {
     ps -o stat= -p $$ | grep -q '+'
 }
 
+is_format() {
+    [[ "${1,,}" =~ ^png|jpe?g$ ]]
+}
+
+is_jpeg() {
+    [[ "${format}" =~ ^jpe?g$ ]]
+}
+
 is_wayland() {
     [ "$NEXTSHOT_ENV" = "wayland" ]
 }
@@ -347,14 +366,24 @@ int2hex() {
     LC_NUMERIC=C printf '%02x\n' "$1"
 }
 
-make_url() {
+make_share_url() {
     local json suffix; read -r json
 
     if $link_previews; then
         suffix=/preview
     fi
+    make_url "/s/$(echo "${json}" | jq -r '.ocs.data.token')${suffix}"
+}
 
-    echo "$server/s/$(echo "$json" | jq -r '.ocs.data.token')${suffix}"
+make_url() {
+    local path="$*";
+    if ! [ "${path:0:1}" = "/" ]; then
+        echo "${server}/${path}"
+        return
+    fi
+
+    $pretty_urls && echo "${server}${*}" \
+        || echo "${server}/index.php${*}"
 }
 
 status_check() {
@@ -430,7 +459,9 @@ from_clipboard() {
 to_clipboard() {
     local mime
 
-    [ "${1:-text}" = "image" ] && mime="image/png" || mime="text/plain"
+    [ "${1:-text}" = "image" ] && (
+        is_jpeg && mime="image/jpeg" || mime="image/png"
+    ) || mime="text/plain"
 
     if is_wayland; then wl-copy -t $mime
     elif [ "${mime}" == "text/plain" ]; then
@@ -441,22 +472,37 @@ to_clipboard() {
 }
 
 load_config() {
-    [ $debug = true ] && echo "Loading config from $_CONFIG_FILE..."
+    [ $debug = true ] && echo -e "\nLoading config from $_CONFIG_FILE..."
     # shellcheck disable=SC1090
     . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
+    [ $debug = true ] && echo "Uploading to /${savedir} as ${username} on Nextcloud instance ${server}"
 
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
     link_previews=${link_previews,,}
+    pretty_urls=${pretty_urls:-true}
+    pretty_urls=${pretty_urls,,}
     rename=${rename:-false}
     rename=${rename,,}
     delay=${delay:-0}
 
+    if is_format "${cliFormat}"; then
+        format="${cliFormat,,}"
+    else
+        is_format "${format}" && format="${format,,}" || format="png"
+    fi
+
     if [ $debug = true ]; then
-        echo "Config loaded!"
+        echo -e "\nParsed config:"
+        echo "  delay: ${delay}"
+        echo "  format: ${format}"
+        echo "  rename: ${rename}"
+        echo "  hlColour: ${hlColour}"
+        echo "  link_previews: ${link_previews}"
+        echo -e "  pretty_urls: ${pretty_urls}\n"
     fi
 }
 
@@ -490,7 +536,7 @@ cache_image() {
 take_screenshot() {
     local filename filepath shoot
 
-    filename="$(date "+%Y-%m-%d %H.%M.%S").png"
+    filename="$(date "+%Y-%m-%d %H.%M.%S").${format}"
     filepath="$_CACHE_DIR/$filename"
 
     if [ "$mode" = "clipboard" ]; then
@@ -506,13 +552,18 @@ take_screenshot() {
 }
 
 shoot_wayland() {
-    local args
+    local args windows
 
     if [ "$mode" = "selection" ]; then
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+    elif [ "$mode" = "monitor" ]; then
+        args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
     elif [ "$mode" = "window" ]; then
-        args=(-g "$(select_window)")
+        windows="$(swaymsg -t get_tree | jq -r '.. | select(.visible? and .pid?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
+        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
     fi
+
+    is_jpeg && args+=(-t jpeg) || args+=(-t png)
 
     delay_capture
     grim "${args[@]}" "$1"
@@ -525,6 +576,45 @@ shoot_x() {
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
+    elif [ "$mode" = "monitor" ]; then
+        local mouse mouseX mouseY monitors geometry
+
+        # Find current cursor position
+        mouse="$(xdotool getmouselocation)"
+        mouseX=$(echo "${mouse}" | awk -F "[: ]" '{print $2}')
+        mouseY=$(echo "${mouse}" | awk -F "[: ]" '{print $4}')
+        [ $debug = true ] && echo "Cursor position: ${mouseX}x${mouseY}" >&2
+
+        # Grab active output positions and sizes
+        monitors=$(i3-msg -t get_outputs | jq -r \
+            '.[] | select(.active) | {name} + .rect | "\(.width)x\(.height)+\(.x)+\(.y)+\(.name)"')
+
+        # Detect which output cursor x/y is in
+        for monitor in ${monitors}; do
+            local monW monH monX monY
+            monW=$(echo "${monitor}" | awk -F "[x+]" '{print $1}')
+            monH=$(echo "${monitor}" | awk -F "[x+]" '{print $2}')
+            monX=$(echo "${monitor}" | awk -F "[x+]" '{print $3}')
+            monY=$(echo "${monitor}" | awk -F "[x+]" '{print $4}')
+            monN=$(echo "${monitor}" | awk -F "[x+]" '{print $5}')
+
+            [ $debug = true ] && echo "Discovered monitor ${monN}: ${monW}x${monH}px @ ${monX}x${monY}" >&2
+
+            if (( mouseX < monX )) || (( mouseX > monX+monW )); then
+                [ $debug = true ] && echo "Cursor Xpos out of bounds of ${monN}!" >&2
+                continue
+            fi
+            if (( mouseY < monY )) || (( mouseY > monY+monH )); then
+                [ $debug = true ] && echo "Cursor Ypos out of bounds of ${monN}" >&2
+                continue
+            fi
+
+            geometry="${monW}x${monH}+${monX}+${monY}"
+            [ $debug = true ] && echo "Found active monitor: ${monN}" >&2
+            break
+        done
+
+        args=(-window root -crop "$geometry")
     elif [ "$mode" = "selection" ]; then
         args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
@@ -566,7 +656,7 @@ nc_upload() {
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$server/remote.php/dav/files/$username/$savedir/${filename// /%20}"
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${filename// /%20}")"
     [ $debug = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     [ $debug = true ] && echo "Sending request to ${reqUrl}..." >&2
 
@@ -582,7 +672,7 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
-    url="$server/apps/gallery/#${savedir}/$filename"
+    url="$(make_url "/apps/gallery/#${savedir}/${filename}")"
     echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
@@ -592,7 +682,7 @@ nc_share() {
     [ $debug = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
     respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
-        "$server/ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" \
+        "$(make_url "ocs/v2.php/apps/files_sharing/api/v1/shares?format=json")" \
         -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
 
     json="$(<"$_CACHE_DIR/share.json")"
@@ -603,64 +693,6 @@ nc_share() {
     fi
 
     echo "$json"
-}
-
-select_window() {
-    local windows window choice num max size offset geometries title titles yadlist
-
-    windows=$(swaymsg -t get_tree | jq -r '.. | (.nodes? // empty)[] | select(.visible and .pid) | {name} + .rect | "\(.x),\(.y) \(.width)x\(.height) \(.name)"')
-    geometries=()
-    yadlist=()
-    titles=()
-
-    echo "Found the following visible windows:" >&2
-    num=0
-    while read -r window; do
-        read -r offset size title <<< "$window"
-        geometries+=("$offset $size")
-        titles+=("$title")
-
-        if is_interactive; then
-            echo "[$num] $title" >&2
-        else
-            yadlist+=("$num" "$title" "$size")
-        fi
-        ((num+=1))
-    done <<< "$windows"
-
-    if is_interactive; then
-        select_window_cli
-    elif has yad; then
-        select_window_gui
-    else
-        echo "Unable to display window selection. Install Yad or run 'nextshot -w' in a terminal." >&2
-        exit 1
-    fi
-
-    echo "Selected window $choice: ${titles[$choice]}" >&2
-    echo "${geometries[$choice]}"
-}
-
-select_window_cli() {
-    ((max="$num-1"))
-    choice=-1
-
-    while [ $choice -lt 0 ] || [ $choice -gt $max ]; do
-        read -r -p "Which window to capture [0-$max]? " choice
-
-        if [ -z "$choice" ] || ! [[ "$choice" =~ ^[0-9]+$ ]]; then
-            echo "Invalid selection. Enter a number between 0 and $max" >&2
-            choice=-1
-        fi
-    done
-}
-
-select_window_gui() {
-    choice=$(yad --list --print-column=1 --hide-column=1 --column="#:NUM" \
-        --width=550 --height=400 --title"NextShot: Select window to capture" \
-        --column="Window Title" --column="Dimensions" "${yadlist[@]}") || \
-        (echo "Window selection cancelled by user." >&2; exit 1)
-    choice=${choice//|}
 }
 
 send_notification() {
@@ -702,22 +734,26 @@ Fill out the options below and you'll be taking screenshots in no time:\n" \
         --field="To generate an App Password, open your Nextcloud instance.
 Under <b>Settings > Personal > Security</b>, enter <i>\"NextShot\"</i> for the App name
 and click <b>Create new app password</b>.\n:LBL" \
+        --field="Enable Pretty URLs:CHK" \
+        --field="When disabled, 'index.php' will be added to links that need it.\n:LBL" \
         --field="Link direct to image instead of Nextcloud UI (appends '/preview'):CHK" \
         --field="Prompt to rename screenshots before upload:CHK" \
         --field="Screenshot Folder" \
         --field="This is where screenshots will be uploaded on Nextcloud, relative to your user root.\n:LBL" \
-        "https://" "" "" "" "" false true "Screenshots") || config_abort
+        "https://" "" "" "" "" true "" false true "Screenshots") || config_abort
 
-    IFS='|' read -r server _ username password _ link_previews rename savedir _ <<< "$response"
+    IFS='|' read -r server _ username password _ pretty_urls _ link_previews rename savedir _ <<< "$response"
     link_previews=${link_previews//\'/}
     link_previews=${link_previews,,}
+    pretty_urls=${pretty_urls//\'/}
+    pretty_urls=${pretty_urls,,}
     rename=${rename//\'/}
     rename=${rename,,}
 
     config=$(yad --title="NextShot Configuration" --borders=10 --separator='' \
         --text="Check the config below and correct any errors before saving:" --fixed\
-        --button="Cancel!window-close:1" --button="Save!document-save:0" --width=400 --height=175 --form --field=":TXT" \
-        "server=$server\nusername=$username\npassword=$password\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
+        --button="Cancel!window-close:1" --button="Save!document-save:0" --width=400 --height=185 --form --field=":TXT" \
+        "server=$server\nusername=$username\npassword=$password\npretty_urls=$pretty_urls\nsavedir=$savedir\nlink_previews=$link_previews\nrename=$rename") || config_abort
 
     echo -e "${config}" > "$_CONFIG_FILE"
 }
@@ -752,6 +788,10 @@ username=''
 
 # Nextcloud App Password created specifically for NextShot (Settings > Personal > Security)
 password=''
+
+# Does your server have Pretty URLs enabled?
+#  Set this to false if links include 'index.php'
+pretty_urls=true
 
 # Folder on Nextcloud where screenshots will be uploaded (must already exist)
 savedir=''
