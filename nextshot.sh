@@ -556,6 +556,8 @@ shoot_wayland() {
 
     if [ "$mode" = "selection" ]; then
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+    elif [ "$mode" = "monitor" ]; then
+        args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
     elif [ "$mode" = "window" ]; then
         windows="$(swaymsg -t get_tree | jq -r '.. | select(.visible? and .pid?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
@@ -575,7 +577,6 @@ shoot_x() {
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
     elif [ "$mode" = "monitor" ]; then
-        echo "Selection set to curent display" >&2
         local mouse mouseX mouseY monitors geometry
 
         # Find current cursor position
