@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+
+## [1.4.0] - 2020-07-09
 ### Added
 * Active config values are now shown as part of verbose output
 * File extension can now be set with `format` in config and/or at runtime
@@ -216,7 +219,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.3.2...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.4.0...develop
+[1.4.0]: https://github.com/dshoreman/nextshot/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/dshoreman/nextshot/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/dshoreman/nextshot/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/dshoreman/nextshot/compare/v1.2.4...v1.3.0
