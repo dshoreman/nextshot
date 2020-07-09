@@ -52,6 +52,7 @@ usage() {
     echo " NextShot automatically upload it to Nextcloud."
     echo
     echo "  -a, --area        Capture only the selected area"
+    echo "  -m, --monitor     Capture only the active monitor"
     echo "  -f, --fullscreen  Capture the entire X/Wayland display"
     echo "  -w, --window      Capture a single window"
     echo "  -d, --delay=NUM   Pause for NUM seconds before capture"
@@ -135,6 +136,7 @@ tray_menu() {
 Open Nextcloud      ! xdg-open $files_url !emblem-web||\
 Capture area        ! nextshot -a         !window-maximize-symbolic|\
 Capture window      ! nextshot -w         !window-new|\
+Capture monitor     ! nextshot -m         !display|\
 Capture full screen ! nextshot -f         !view-fullscreen-symbolic||\
 Paste from Clipboard! nextshot -p         !edit-paste-symbolic||\
 Quit Nextshot       ! kill $traypid       !application-exit" >&3
@@ -173,8 +175,8 @@ setup() {
 }
 
 parse_opts() {
-    local -r OPTS=D::htvVawd:F:fpc
-    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,paste,file:,clipboard
+    local -r OPTS=D::htvVamwd:F:fpc
+    local -r LONG=deps::,dependencies::,env:,help,tray,prune-cache,verbose,version,area,window,delay:,format:,fullscreen,monitor,paste,file:,clipboard
     local parsed
 
     ! parsed=$(getopt -o "$OPTS" -l "$LONG" -n "$0" -- "$@")
@@ -225,6 +227,8 @@ parse_opts() {
                 mode="selection"; shift ;;
             -f|--fullscreen)
                 mode="fullscreen"; shift ;;
+            -m|--monitor)
+                mode="monitor"; shift ;;
             -w|--window)
                 mode="window"; shift ;;
             -d|--delay)
@@ -552,6 +556,8 @@ shoot_wayland() {
 
     if [ "$mode" = "selection" ]; then
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+    elif [ "$mode" = "monitor" ]; then
+        args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
     elif [ "$mode" = "window" ]; then
         windows="$(swaymsg -t get_tree | jq -r '.. | select(.visible? and .pid?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
         args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
@@ -570,6 +576,45 @@ shoot_x() {
 
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
+    elif [ "$mode" = "monitor" ]; then
+        local mouse mouseX mouseY monitors geometry
+
+        # Find current cursor position
+        mouse="$(xdotool getmouselocation)"
+        mouseX=$(echo "${mouse}" | awk -F "[: ]" '{print $2}')
+        mouseY=$(echo "${mouse}" | awk -F "[: ]" '{print $4}')
+        [ $debug = true ] && echo "Cursor position: ${mouseX}x${mouseY}" >&2
+
+        # Grab active output positions and sizes
+        monitors=$(i3-msg -t get_outputs | jq -r \
+            '.[] | select(.active) | {name} + .rect | "\(.width)x\(.height)+\(.x)+\(.y)+\(.name)"')
+
+        # Detect which output cursor x/y is in
+        for monitor in ${monitors}; do
+            local monW monH monX monY
+            monW=$(echo "${monitor}" | awk -F "[x+]" '{print $1}')
+            monH=$(echo "${monitor}" | awk -F "[x+]" '{print $2}')
+            monX=$(echo "${monitor}" | awk -F "[x+]" '{print $3}')
+            monY=$(echo "${monitor}" | awk -F "[x+]" '{print $4}')
+            monN=$(echo "${monitor}" | awk -F "[x+]" '{print $5}')
+
+            [ $debug = true ] && echo "Discovered monitor ${monN}: ${monW}x${monH}px @ ${monX}x${monY}" >&2
+
+            if (( mouseX < monX )) || (( mouseX > monX+monW )); then
+                [ $debug = true ] && echo "Cursor Xpos out of bounds of ${monN}!" >&2
+                continue
+            fi
+            if (( mouseY < monY )) || (( mouseY > monY+monH )); then
+                [ $debug = true ] && echo "Cursor Ypos out of bounds of ${monN}" >&2
+                continue
+            fi
+
+            geometry="${monW}x${monH}+${monX}+${monY}"
+            [ $debug = true ] && echo "Found active monitor: ${monN}" >&2
+            break
+        done
+
+        args=(-window root -crop "$geometry")
     elif [ "$mode" = "selection" ]; then
         args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then

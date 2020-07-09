@@ -49,7 +49,7 @@ based on your environment:
 
 ```sh
 # To use in i3 (or other X11-based environments)
-sudo pacman -S --asdeps imagemagick slop xclip yad
+sudo pacman -S --asdeps imagemagick slop xclip xdotool yad
 
 # To use in Sway
 sudo pacman -S --asdeps grim slurp wl-clipboard yad
@@ -75,16 +75,16 @@ To have Nextshot's primary functions bound to the Print Screen key on i3 and Swa
 to your `config` file in `~/.config/i3` and/or `~/.config/sway` respectively:
 
 ```
-bindsym Print exec --no-startup-id "nextshot -f"
+bindsym Print exec --no-startup-id "nextshot -m"
 bindsym Mod4+Print exec --no-startup-id "nextshot -w"
 bindsym Shift+Print exec --no-startup-id "nextshot -a"
 
-bindsym Ctrl+Print exec --no-startup-id "nextshot -fc"
+bindsym Ctrl+Print exec --no-startup-id "nextshot -mc"
 bindsym Ctrl+Mod4+Print exec --no-startup-id "nextshot -wc"
 bindsym Ctrl+Shift+Print exec --no-startup-id "nextshot -ac"
 ```
 
-These bindings will have `PrtScr` capture the full screen, `Shift+PrtScr` capture an area, and
+These bindings will have `PrtScr` capture the current screen, `Shift+PrtScr` capture an area, and
 `Super+PrtScr` capture a window—each uploading automatically to Nextcloud and copying the
 share link to your clipboard.
 
@@ -109,7 +109,11 @@ bypass Nextcloud and instead copy the image to clipboard, add the `-c` or `--cli
 
     `nextshot -w` or `nextshot --window`
 
-* **Capture the entire desktop**
+* **Capture the active display**
+
+    `nextshot -m` or `nextshot --monitor`
+
+* **Capture *all* outputs**
 
     `nextshot -f` or `nextshot --fullscreen`
 
