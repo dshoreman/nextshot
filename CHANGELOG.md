@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Active config values are now shown as part of verbose output
 * File extension can now be set with `format` in config and/or at runtime
 * New `pretty_urls` config option to support Nextcloud servers that require `/index.php`
+* Screenshot the active display with `nextshot --monitor`, or `-m` for short
 
 ### Changed
 * Window selection on Sway is now via Slurp instead of a list
