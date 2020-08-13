@@ -457,17 +457,17 @@ from_clipboard() {
 }
 
 to_clipboard() {
-    local mime
+    local mime="text/plain"
 
-    [ "${1:-text}" = "image" ] && (
+    if [ "${1:-text}" = "image" ]; then
         is_jpeg && mime="image/jpeg" || mime="image/png"
-    ) || mime="text/plain"
+    fi
 
     if is_wayland; then wl-copy -t $mime
     elif [ "${mime}" == "text/plain" ]; then
         xclip -selection clipboard
     else
-        xclip -selection clipboard -t $mime
+        xclip -selection clipboard -t "${mime}"
     fi
 }
 
