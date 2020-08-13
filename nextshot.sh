@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.4.0"
+readonly _VERSION="1.4.1"
 
 usage() {
     echo "Usage:"
@@ -457,17 +457,17 @@ from_clipboard() {
 }
 
 to_clipboard() {
-    local mime
+    local mime="text/plain"
 
-    [ "${1:-text}" = "image" ] && (
+    if [ "${1:-text}" = "image" ]; then
         is_jpeg && mime="image/jpeg" || mime="image/png"
-    ) || mime="text/plain"
+    fi
 
     if is_wayland; then wl-copy -t $mime
     elif [ "${mime}" == "text/plain" ]; then
         xclip -selection clipboard
     else
-        xclip -selection clipboard -t $mime
+        xclip -selection clipboard -t "${mime}"
     fi
 }
 
