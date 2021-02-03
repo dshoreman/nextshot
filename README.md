@@ -1,4 +1,5 @@
 ![Nextshot logo](resources/logo.png)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdshoreman%2Fnextshot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdshoreman%2Fnextshot?ref=badge_shield)
 
 **Quickly take screenshots on Linux—sharing instantly with Nextcloud**
 
@@ -323,3 +324,7 @@ If you find Nextshot useful and would like to contribute, there are a few ways y
 [2]: https://github.com/v1cont/yad/commit/06de51cff3ff4c98039161745f20c2c16a516cb3
 [3]: https://github.com/dshoreman/nextshot/issues
 [4]: https://icons8.com
+
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fdshoreman%2Fnextshot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fdshoreman%2Fnextshot?ref=badge_large)
