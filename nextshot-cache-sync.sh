@@ -16,7 +16,7 @@ err() {
 }
 
 main() {
-    local pruned=0 copied=0 image
+    local copied=0 skipped=0 pruned=0 image
 
     [ -d "${NC_IMAGE_DIR}" ] || err "Nextcloud image directory does not exist.\nTried: ${NC_IMAGE_DIR}"
     pushd "${NS_CACHE_DIR}" >/dev/null || err "Nextshot cache directory does not exist.\nTried: ${NS_CACHE_DIR}"
@@ -25,8 +25,7 @@ main() {
         process_image
     done
 
-    echo "Pruned ${pruned} and copied ${copied} files."
-    popd>/dev/null || exit
+    summarise && popd>/dev/null || exit
 }
 
 process_image() {
@@ -38,15 +37,36 @@ process_image() {
 }
 
 prune() {
-    debug "$1 - Synced! - Pruning..."
-    [ -z $DRYRUN ] && rm "${NC_IMAGE_DIR}/$1"
-    pruned=$((pruned+1))
+    if diff "${NS_CACHE_DIR}/$1" "${NC_IMAGE_DIR}/$1" >/dev/null; then
+        debug "$1 - Synced! - Pruning..."
+        [ -z $DRYRUN ] && rm "${NC_IMAGE_DIR}/$1"
+        pruned=$((pruned+1))
+    else
+        debug "$1 - SKIPPED - Nextcloud copy exists but does not match."
+        skipped=$((skipped+1))
+    fi
 }
 
 relocate() {
     debug "$1 - MISSING - Copying into Nextcloud screenshots dir..."
     [ -z $DRYRUN ] && cp "${NS_CACHE_DIR}/$1" "${NC_IMAGE_DIR}/$1"
     copied=$((copied+1))
+}
+
+summarise() {
+    cat << EOF
+
+    Cache sync complete!
+
+    In all, there were:
+        ${pruned} images removed that already exist in Nextcloud
+        ${copied} images copied that were previously missing
+        ${skipped} images skipped due to conflicts
+
+    Run this script again to remove any lingering images once
+    you've confirmed the newly-copied files have been synced.
+
+EOF
 }
 
 main
