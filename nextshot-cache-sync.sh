@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-[[ "$1" == "-v" ]] && DEBUG=1
+[[ "$1" == "-d" ]] || [[ "$2" == "-d" ]] && DRYRUN=1
+[[ "$1" == "-v" ]] || [[ "$2" == "-v" ]] && DEBUG=1
 
 NC_ROOT=${NC_ROOT:-$HOME/nextcloud}
 NC_IMAGE_DIR=$NC_ROOT/${NC_IMAGE_DIR:-Screenshots}
@@ -38,6 +39,7 @@ process_image() {
 
 prune() {
     debug "$1 is synced! Pruning..."
+    [ -z $DRYRUN ] && rm "${NC_IMAGE_DIR}/$1"
     pruned=$((pruned+1))
 }
 
