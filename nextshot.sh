@@ -143,6 +143,11 @@ Quit Nextshot       ! kill $traypid       !application-exit" >&3
 
     echo "icon:nextshot-16x16" >&3
     echo "tooltip:Nextshot" >&3
+
+    for (( i=1; i < 8; i++ )); do
+        echo "icon:nextshot-16x16" >&3
+        sleep 0.5s
+    done
 }
 
 sanity_check() {

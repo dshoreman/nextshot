@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Fixed
+* Worked around Yad ignoring tray icon if the tray isn't visible
 
 
 ## [1.4.1] - 2020-08-13
