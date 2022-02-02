@@ -579,6 +579,9 @@ shoot_x() {
 
     slop="slop -c $hlColour,0.4 -lb 3"
 
+    has slop || echo -e "WARNING: Slop is required for most capture modes.\nRun nextshot -D to check dependencies." >&2
+    has import || { echo -e "ERROR: import command is missing.\nRun nextshot -D To check dependencies." >&2; exit 1; }
+
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
     elif [ "$mode" = "monitor" ]; then
