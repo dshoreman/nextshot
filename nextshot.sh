@@ -342,6 +342,22 @@ has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
+prefers() {
+    has "$1" || {
+        echo "WARNING: $1 is missing. Some features will not work as expected."
+        echo "Run nextshot -D to check for dependencies."
+        sleep 1
+    } >&2
+}
+
+requires() {
+    has "$1" || {
+        echo -e "ERROR: $1 is required to continue."
+        echo "Run nextshot -D to check for dependencies."
+        exit 1
+    } >&2
+}
+
 # shellcheck disable=SC2009
 is_interactive() {
     ps -o stat= -p $$ | grep -q '+'
@@ -579,9 +595,6 @@ shoot_x() {
 
     slop="slop -c $hlColour,0.4 -lb 3"
 
-    has slop || echo -e "WARNING: Slop is required for most capture modes.\nRun nextshot -D to check dependencies." >&2
-    has import || { echo -e "ERROR: import command is missing.\nRun nextshot -D To check dependencies." >&2; exit 1; }
-
     if [ "$mode" = "fullscreen" ]; then
         args=(-window root)
     elif [ "$mode" = "monitor" ]; then
@@ -624,11 +637,14 @@ shoot_x() {
 
         args=(-window root -crop "$geometry")
     elif [ "$mode" = "selection" ]; then
-        args=(-window root -crop "$($slop -f "%g" -t 0)")
+        prefers slop
+        has slop && args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
-        args=(-window "$($slop -f "%i" -t 999999)")
+        prefers slop
+        has slop && args=(-window "$($slop -f "%i" -t 999999)")
     fi
 
+    requires import
     delay_capture
     import "${args[@]}" "$1"
 }
