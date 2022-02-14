@@ -463,8 +463,11 @@ check_dep() {
 check_clipboard() {
     local cmd
 
-    if is_wayland; then cmd="wl-paste -l"
+    if is_wayland; then
+        require wl-paste
+        cmd="wl-paste -l"
     else
+        require xclip
         cmd="xclip -selection clipboard -o -t TARGETS"
     fi
 
@@ -485,11 +488,16 @@ to_clipboard() {
         is_jpeg && mime="image/jpeg" || mime="image/png"
     fi
 
-    if is_wayland; then wl-copy -t $mime
-    elif [ "${mime}" == "text/plain" ]; then
-        xclip -selection clipboard
+    if is_wayland; then
+        require wl-copy
+        wl-copy -t $mime
     else
-        xclip -selection clipboard -t "${mime}"
+        require xclip
+        if [ "${mime}" == "text/plain" ]; then
+            xclip -selection clipboard
+        else
+            xclip -selection clipboard -t "${mime}"
+        fi
     fi
 }
 
