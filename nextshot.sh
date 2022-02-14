@@ -417,7 +417,7 @@ status_check() {
     local reqW=(
         "grim           grim         to take screenshots"
         "slurp          slurp        for area selection"
-        "wl-clipboard   wl-clipboard to interact with the clipboard"
+        "wl-copy        wl-clipboard to interact with the clipboard"
     )
     local reqX=(
         "slop   slop        for window and area selection"
