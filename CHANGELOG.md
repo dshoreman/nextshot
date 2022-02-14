@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 * Worked around Yad ignoring tray icon if the tray isn't visible
 * Missing env-specific dependencies weren't checked before being run
+* Checking clipboard too early caused accidental xclip error on Wayland
 
 
 ## [1.4.1] - 2020-08-13

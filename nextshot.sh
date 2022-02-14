@@ -100,6 +100,11 @@ nextshot() {
     parse_environment
     load_config
 
+    if [ "$mode" = "clipboard" ] && ! check_clipboard; then
+        echo "Clipboard does not contain an image, aborting."
+        exit 1
+    fi
+
     image=$(cache_image)
 
     if [ "$output_mode" = "clipboard" ]; then
@@ -259,10 +264,6 @@ parse_opts() {
                 fi
                 shift 2 ;;
             -p|--paste)
-                if ! check_clipboard; then
-                    echo "Clipboard does not contain an image, aborting."
-                    exit 1
-                fi
                 mode="clipboard"; shift ;;
             -c|--clipboard)
                 output_mode="clipboard"; shift ;;
