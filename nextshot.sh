@@ -576,16 +576,22 @@ shoot_wayland() {
     local args windows
 
     if [ "$mode" = "selection" ]; then
-        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+        prefers slurp
+        has slurp && args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
     elif [ "$mode" = "monitor" ]; then
-        args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
+        prefers swaymsg
+        has swaymsg && \
+            args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
     elif [ "$mode" = "window" ]; then
+        prefers slurp
+        requires swaymsg
         windows="$(swaymsg -t get_tree | jq -r '.. | select(.visible? and .pid?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
-        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
+        has slurp && args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
     fi
 
     is_jpeg && args+=(-t jpeg) || args+=(-t png)
 
+    requires grim
     delay_capture
     grim "${args[@]}" "$1"
 }
