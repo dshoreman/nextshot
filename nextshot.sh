@@ -464,10 +464,10 @@ check_clipboard() {
     local cmd
 
     if is_wayland; then
-        require wl-paste
+        requires wl-paste
         cmd="wl-paste -l"
     else
-        require xclip
+        requires xclip
         cmd="xclip -selection clipboard -o -t TARGETS"
     fi
 
@@ -489,10 +489,10 @@ to_clipboard() {
     fi
 
     if is_wayland; then
-        require wl-copy
+        requires wl-copy
         wl-copy -t $mime
     else
-        require xclip
+        requires xclip
         if [ "${mime}" == "text/plain" ]; then
             xclip -selection clipboard
         else
