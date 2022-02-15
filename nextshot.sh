@@ -100,6 +100,11 @@ nextshot() {
     parse_environment
     load_config
 
+    if [ "$mode" = "clipboard" ] && ! check_clipboard; then
+        echo "Clipboard does not contain an image, aborting."
+        exit 1
+    fi
+
     image=$(cache_image)
 
     if [ "$output_mode" = "clipboard" ]; then
@@ -259,10 +264,6 @@ parse_opts() {
                 fi
                 shift 2 ;;
             -p|--paste)
-                if ! check_clipboard; then
-                    echo "Clipboard does not contain an image, aborting."
-                    exit 1
-                fi
                 mode="clipboard"; shift ;;
             -c|--clipboard)
                 output_mode="clipboard"; shift ;;
@@ -416,7 +417,7 @@ status_check() {
     local reqW=(
         "grim           grim         to take screenshots"
         "slurp          slurp        for area selection"
-        "wl-clipboard   wl-clipboard to interact with the clipboard"
+        "wl-copy        wl-clipboard to interact with the clipboard"
     )
     local reqX=(
         "slop   slop        for window and area selection"
@@ -462,8 +463,11 @@ check_dep() {
 check_clipboard() {
     local cmd
 
-    if is_wayland; then cmd="wl-paste -l"
+    if is_wayland; then
+        require wl-paste
+        cmd="wl-paste -l"
     else
+        require xclip
         cmd="xclip -selection clipboard -o -t TARGETS"
     fi
 
@@ -484,11 +488,16 @@ to_clipboard() {
         is_jpeg && mime="image/jpeg" || mime="image/png"
     fi
 
-    if is_wayland; then wl-copy -t $mime
-    elif [ "${mime}" == "text/plain" ]; then
-        xclip -selection clipboard
+    if is_wayland; then
+        require wl-copy
+        wl-copy -t $mime
     else
-        xclip -selection clipboard -t "${mime}"
+        require xclip
+        if [ "${mime}" == "text/plain" ]; then
+            xclip -selection clipboard
+        else
+            xclip -selection clipboard -t "${mime}"
+        fi
     fi
 }
 
