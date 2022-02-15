@@ -12,5 +12,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Build Nextshot
+        run: make
       - name: Run Shellcheck
         uses: ludeeus/action-shellcheck@master

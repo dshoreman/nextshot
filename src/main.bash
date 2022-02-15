@@ -105,7 +105,7 @@ usage() {
     echo
 }
 
-nextshot() {
+main() {
     local debug=false image filename json url
     output_mode="nextcloud"
 
@@ -135,4 +135,4 @@ nextshot() {
     fi
 }
 
-nextshot "$@"
+main "$@"
