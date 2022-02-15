@@ -69,7 +69,8 @@ finish_release() {
     echo "+--------------------+"
     echo
     git flow "$action" finish "${newver}" \
-        && git push origin --all && git push origin --tags \
+        && git push origin master && git push origin develop \
+        && git push origin --tags \
         && update_aur
 }
 

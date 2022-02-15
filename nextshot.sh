@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.4.1"
+readonly _VERSION="1.4.2"
 
 usage() {
     echo "Usage:"
@@ -100,6 +100,11 @@ nextshot() {
     parse_environment
     load_config
 
+    if [ "$mode" = "clipboard" ] && ! check_clipboard; then
+        echo "Clipboard does not contain an image, aborting."
+        exit 1
+    fi
+
     image=$(cache_image)
 
     if [ "$output_mode" = "clipboard" ]; then
@@ -143,6 +148,11 @@ Quit Nextshot       ! kill $traypid       !application-exit" >&3
 
     echo "icon:nextshot-16x16" >&3
     echo "tooltip:Nextshot" >&3
+
+    for (( i=1; i < 8; i++ )); do
+        echo "icon:nextshot-16x16" >&3
+        sleep 0.5s
+    done
 }
 
 sanity_check() {
@@ -254,10 +264,6 @@ parse_opts() {
                 fi
                 shift 2 ;;
             -p|--paste)
-                if ! check_clipboard; then
-                    echo "Clipboard does not contain an image, aborting."
-                    exit 1
-                fi
                 mode="clipboard"; shift ;;
             -c|--clipboard)
                 output_mode="clipboard"; shift ;;
@@ -337,6 +343,22 @@ has() {
     type "$1" >/dev/null 2>&1 || return 1
 }
 
+prefers() {
+    has "$1" || {
+        echo "WARNING: $1 is missing. Some features will not work as expected."
+        echo "Run nextshot -D to check for dependencies."
+        sleep 1
+    } >&2
+}
+
+requires() {
+    has "$1" || {
+        echo -e "ERROR: $1 is required to continue."
+        echo "Run nextshot -D to check for dependencies."
+        exit 1
+    } >&2
+}
+
 # shellcheck disable=SC2009
 is_interactive() {
     ps -o stat= -p $$ | grep -q '+'
@@ -395,7 +417,7 @@ status_check() {
     local reqW=(
         "grim           grim         to take screenshots"
         "slurp          slurp        for area selection"
-        "wl-clipboard   wl-clipboard to interact with the clipboard"
+        "wl-copy        wl-clipboard to interact with the clipboard"
     )
     local reqX=(
         "slop   slop        for window and area selection"
@@ -441,8 +463,11 @@ check_dep() {
 check_clipboard() {
     local cmd
 
-    if is_wayland; then cmd="wl-paste -l"
+    if is_wayland; then
+        require wl-paste
+        cmd="wl-paste -l"
     else
+        require xclip
         cmd="xclip -selection clipboard -o -t TARGETS"
     fi
 
@@ -463,11 +488,16 @@ to_clipboard() {
         is_jpeg && mime="image/jpeg" || mime="image/png"
     fi
 
-    if is_wayland; then wl-copy -t $mime
-    elif [ "${mime}" == "text/plain" ]; then
-        xclip -selection clipboard
+    if is_wayland; then
+        require wl-copy
+        wl-copy -t $mime
     else
-        xclip -selection clipboard -t "${mime}"
+        require xclip
+        if [ "${mime}" == "text/plain" ]; then
+            xclip -selection clipboard
+        else
+            xclip -selection clipboard -t "${mime}"
+        fi
     fi
 }
 
@@ -555,16 +585,22 @@ shoot_wayland() {
     local args windows
 
     if [ "$mode" = "selection" ]; then
-        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
+        prefers slurp
+        has slurp && args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66")")
     elif [ "$mode" = "monitor" ]; then
-        args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
+        prefers swaymsg
+        has swaymsg && \
+            args=(-g "$(swaymsg -t get_workspaces | jq -r '.[] | select(.focused) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')")
     elif [ "$mode" = "window" ]; then
+        prefers slurp
+        requires swaymsg
         windows="$(swaymsg -t get_tree | jq -r '.. | select(.visible? and .pid?) | .rect | "\(.x),\(.y) \(.width)x\(.height)"')"
-        args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
+        has slurp && args=(-g "$(slurp -d -c "${hlColour}ee" -s "${hlColour}66" <<< "${windows}")")
     fi
 
     is_jpeg && args+=(-t jpeg) || args+=(-t png)
 
+    requires grim
     delay_capture
     grim "${args[@]}" "$1"
 }
@@ -616,11 +652,14 @@ shoot_x() {
 
         args=(-window root -crop "$geometry")
     elif [ "$mode" = "selection" ]; then
-        args=(-window root -crop "$($slop -f "%g" -t 0)")
+        prefers slop
+        has slop && args=(-window root -crop "$($slop -f "%g" -t 0)")
     elif [ "$mode" = "window" ]; then
-        args=(-window "$($slop -f "%i" -t 999999)")
+        prefers slop
+        has slop && args=(-window "$($slop -f "%i" -t 999999)")
     fi
 
+    requires import
     delay_capture
     import "${args[@]}" "$1"
 }

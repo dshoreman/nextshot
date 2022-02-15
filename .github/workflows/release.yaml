@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  release-tagged:
+    name: Build release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Generate Changelog
+        run: |
+          TAG="${GITHUB_REF_NAME//./\.}"
+          echo "Generating changelog for ${TAG}..."
+          sed -n "/^## \[${TAG/v/}\]/,/^## \[/{//b;p}" CHANGELOG.md > ${{ github.workspace }}-changes.md
+          cat ${{ github.workspace }}-changes.md
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ github.workspace }}-changes.md
