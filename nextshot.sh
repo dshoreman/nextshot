@@ -31,7 +31,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.4.2"
+readonly _VERSION="1.4.3"
 
 usage() {
     echo "Usage:"
@@ -464,10 +464,10 @@ check_clipboard() {
     local cmd
 
     if is_wayland; then
-        require wl-paste
+        requires wl-paste
         cmd="wl-paste -l"
     else
-        require xclip
+        requires xclip
         cmd="xclip -selection clipboard -o -t TARGETS"
     fi
 
@@ -489,10 +489,10 @@ to_clipboard() {
     fi
 
     if is_wayland; then
-        require wl-copy
+        requires wl-copy
         wl-copy -t $mime
     else
-        require xclip
+        requires xclip
         if [ "${mime}" == "text/plain" ]; then
             xclip -selection clipboard
         else
