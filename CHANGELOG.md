@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+
+
+## [1.4.3] - 2022-02-15
 ### Fixed
 * Typos in clipboard checks added in 1.4.2 (require != requires)
 
@@ -234,7 +237,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.4.2...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.4.3...develop
+[1.4.3]: https://github.com/dshoreman/nextshot/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/dshoreman/nextshot/compare/v1.4.1...v1.4.2
 [1.4.1]: https://github.com/dshoreman/nextshot/compare/v1.4.0...v1.4.1
 [1.4.0]: https://github.com/dshoreman/nextshot/compare/v1.3.2...v1.4.0
