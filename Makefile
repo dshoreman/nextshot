@@ -4,11 +4,13 @@ PREFIX ?= /usr
 
 all:
 	@echo -n "Building Nextshot... "
-	@cat src/main.bash src/_*.bash | \
-		$(GNU_SED) -e '/^source ".*\.bash"$$/,+1d' \
-			-e '/^main "$$@"$$/{H;d};$${p;x;s/^\n//}' \
-			-e '/^\(SCRIPT_ROOT=\|$$\)/d' \
-		> nextshot
+	@# Append safe files, strip empty lines and includes
+	@cat src/main.bash src/_[a-z]*.bash | $(GNU_SED) -e \
+		'/^\($$\|source ".*\.bash"$$\|SCRIPT_ROOT=\)/d' > nextshot
+	@# Append special files, retaining blank lines
+	@cat src/__*.bash >> nextshot
+	@# Move 'main' call to the end of the script
+	@$(GNU_SED) -i -e '/^main "$$@"$$/{H;d};$${p;x}' nextshot
 	@chmod +x nextshot && echo "Done!"
 
 install:
