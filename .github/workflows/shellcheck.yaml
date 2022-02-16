@@ -16,6 +16,9 @@ jobs:
         uses: actions/checkout@v2
       - name: Build Nextshot
         run: make
+      - name: Enable problem matcher
+        run: |
+          echo "::add-matcher::.github/problem-matcher-gcc.json"
       - name: Fetch Latest Shellcheck
         run: |
           dlpath="https://github.com/koalaman/shellcheck/releases/download/stable"
@@ -24,4 +27,4 @@ jobs:
           mv ./shellcheck-stable/shellcheck ./shellcheck
       - name: Run Shellcheck
         run: |
-          ./shellcheck -axP src release src/main.bash
+          ./shellcheck -axP src --format=gcc -S warning release src/main.bash
