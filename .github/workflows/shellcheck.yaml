@@ -1,3 +1,5 @@
+name: Build
+
 on:
   workflow_dispatch:
   pull_request:
@@ -12,5 +14,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Build Nextshot
+        run: make
+      - name: Enable problem matcher
+        run: |
+          echo "::add-matcher::.github/problem-matcher-gcc.json"
+      - name: Fetch Latest Shellcheck
+        run: |
+          dlpath="https://github.com/koalaman/shellcheck/releases/download/stable"
+          curl -Lo ./shellcheck.tar.xz "${dlpath}/shellcheck-stable.linux.x86_64.tar.xz"
+          tar -xf ./shellcheck.tar.xz
+          mv ./shellcheck-stable/shellcheck ./shellcheck
       - name: Run Shellcheck
-        uses: ludeeus/action-shellcheck@master
+        run: |
+          ./shellcheck -axP src --format=gcc -S warning release src/main.bash

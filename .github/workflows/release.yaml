@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+      - name: Build Nextshot
+        run: make
       - name: Generate Changelog
         run: |
           TAG="${GITHUB_REF_NAME//./\.}"
@@ -23,3 +25,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ github.workspace }}-changes.md
+          files: nextshot
