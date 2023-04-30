@@ -8,6 +8,9 @@ attempt_rename() {
     if [ "$rename" = true ] && is_interactive; then newname="$(rename_cli "$1")"
     elif [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
     else newname="$1"; fi
+    
+    # Append extension, if not present
+    if [ -n "$newname" ] && [ ! "$newname" = *".${format}" ]; then newname="${newname}.${format}"; fi
 
     if [ ! "$1" = "$newname" ]; then
         [ "$debug" = true ] && cmd="mv -v" || cmd="mv"
