@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* Updated troubleshooting in readme with fix for Slop+Picom blurring the screen
 
 
 ## [1.4.3] - 2022-02-15

@@ -37,6 +37,9 @@ compatibility with compositors other than Sway.
   * [Example nextshot.conf](#example-nextshotconf)
   * [Available Options](#available-options)
 * [Troubleshooting](#troubleshooting)
+  * [Environment detection not working properly](#nextshot-is-detecting-the-wrong-environment)
+  * [Entire screen getting blurred by Picom](#everything-goes-blurry-when-trying-to-take-a-screenshot)
+  * [Right-clicking tray icon does nothing](#the-tray-icon-shows-up-but-right-click-doesnt-do-anything)
 * [Known Issues](#known-issues)
 * [Contributing](#contributing)
 
@@ -290,6 +293,19 @@ NEXTSHOT_ENV=wayland nextshot ...
 
 Likewise if you're running from X11 but Nextshot detects Wayland, you can set `--env` or
 `NEXTSHOT_ENV` to `x11`. For more details and possible values, see `nextshot --help`.
+
+#### Everything goes blurry when trying to take a screenshot
+
+If you're using Slop, it works by creating a window the size of the screen. If you *also*
+happen to use Picom with background blurring enabled, you might struggle to see anything.
+
+This can be fixed by excluding the Slop window in your **~/.config/picom/picom.conf**:
+
+```sh
+blur-background-exclude = [
+    "name = 'slop'"
+]
+```
 
 #### The tray icon shows up, but right-click doesn't do anything!
 
