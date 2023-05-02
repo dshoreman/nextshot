@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 * Updated troubleshooting in readme with fix for Slop+Picom blurring the screen
 
+### Fixed
+* Setting an empty filename in the GUI prompt no longer tries to `mv dir/foo.png dir/`
+* Files with no extension now have default format added to resolve Nextcloud UI issues
+
 
 ## [1.4.3] - 2022-02-15
 ### Fixed

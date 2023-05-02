@@ -6,11 +6,10 @@ attempt_rename() {
     local cmd newname
 
     if [ "$rename" = true ] && is_interactive; then newname="$(rename_cli "$1")"
-    elif [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"
-    else newname="$1"; fi
-    
-    # Append extension, if not present
-    if [ -n "$newname" ] && [ ! "$newname" = *".${format}" ]; then newname="${newname}.${format}"; fi
+    elif [ "$rename" = true ] && has yad; then newname="$(rename_gui "$1")"; fi
+
+    [ -n "$newname" ] || newname="$1"
+    [[ "$newname" == *".${format}" ]] || newname="${newname}.${format}"
 
     if [ ! "$1" = "$newname" ]; then
         [ "$debug" = true ] && cmd="mv -v" || cmd="mv"
