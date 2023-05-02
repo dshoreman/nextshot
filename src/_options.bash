@@ -29,6 +29,7 @@ parse_opts() {
                 esac
                 status_check "$chk" && exit 0 ;;
             --env)
+                # shellcheck disable=SC2034
                 NEXTSHOT_ENV=${2//=}
                 shift 2 ;;
             -h|--help)
@@ -56,6 +57,7 @@ parse_opts() {
             -w|--window)
                 mode="window"; shift ;;
             -d|--delay)
+                # shellcheck disable=SC2034
                 delay=${2//=}; shift 2 ;;
             -F|--format)
                 cliFormat=${2//=}
@@ -90,8 +92,8 @@ parse_opts() {
         esac
     done
 
-    : ${mode:=selection}
-    if [ $debug = true ]; then
+    : "${mode:=selection}"
+    if [ "$debug" = true ]; then
         echo "Screenshot mode set to $mode"
         echo "Output will be sent to ${output_mode^}"
     fi

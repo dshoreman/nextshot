@@ -1,3 +1,5 @@
+[ "$(basename -- "$0")" = "_env.bash" ] && ${debug:?}
+
 check_bash_version() {
     ! getopt -T > /dev/null
     if [[ ${PIPESTATUS[0]} -ne 4 ]]; then
@@ -25,7 +27,7 @@ parse_environment() {
             echo "Invalid environment '${NEXTSHOT_ENV}'. Valid options include 'auto', 'wayland' or 'x11'."
             exit 1 ;;
     esac
-    if [ $debug = true ]; then
+    if [ "$debug" = true ]; then
         echo "Environment $method set to ${NEXTSHOT_ENV}"
     fi
 }

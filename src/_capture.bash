@@ -1,3 +1,7 @@
+[ "$(basename -- "$0")" = "_capture.bash" ] && \
+    ${debug:?} && ${delay:?} && ${mode:?} && \
+    ${format:?} && ${rename:?}
+
 attempt_rename() {
     local cmd newname
 
@@ -6,7 +10,7 @@ attempt_rename() {
     else newname="$1"; fi
 
     if [ ! "$1" = "$newname" ]; then
-        [ $debug = true ] && cmd="mv -v" || cmd="mv"
+        [ "$debug" = true ] && cmd="mv -v" || cmd="mv"
         $cmd "$_CACHE_DIR/$1" "$_CACHE_DIR/$newname" >&2
     fi
 
@@ -15,10 +19,12 @@ attempt_rename() {
 
 cache_image() {
     if [ "$mode" = "file" ]; then
+        ${file:?}
+
         local cmd filename
         filename="$(basename "$file")"
 
-        [ $debug = true ] && cmd="cp -v" || cmd="cp"
+        [ "$debug" = true ] && cmd="cp -v" || cmd="cp"
         $cmd "$file" "$_CACHE_DIR/$filename" >&2 && echo "$filename"
     else
         take_screenshot
@@ -106,7 +112,7 @@ shoot_x() {
         mouse="$(xdotool getmouselocation)"
         mouseX=$(echo "${mouse}" | awk -F "[: ]" '{print $2}')
         mouseY=$(echo "${mouse}" | awk -F "[: ]" '{print $4}')
-        [ $debug = true ] && echo "Cursor position: ${mouseX}x${mouseY}" >&2
+        [ "$debug" = true ] && echo "Cursor position: ${mouseX}x${mouseY}" >&2
 
         # Grab active output positions and sizes
         monitors=$(i3-msg -t get_outputs | jq -r \
@@ -121,19 +127,19 @@ shoot_x() {
             monY=$(echo "${monitor}" | awk -F "[x+]" '{print $4}')
             monN=$(echo "${monitor}" | awk -F "[x+]" '{print $5}')
 
-            [ $debug = true ] && echo "Discovered monitor ${monN}: ${monW}x${monH}px @ ${monX}x${monY}" >&2
+            [ "$debug" = true ] && echo "Discovered monitor ${monN}: ${monW}x${monH}px @ ${monX}x${monY}" >&2
 
             if (( mouseX < monX )) || (( mouseX > monX+monW )); then
-                [ $debug = true ] && echo "Cursor Xpos out of bounds of ${monN}!" >&2
+                [ "$debug" = true ] && echo "Cursor Xpos out of bounds of ${monN}!" >&2
                 continue
             fi
             if (( mouseY < monY )) || (( mouseY > monY+monH )); then
-                [ $debug = true ] && echo "Cursor Ypos out of bounds of ${monN}" >&2
+                [ "$debug" = true ] && echo "Cursor Ypos out of bounds of ${monN}" >&2
                 continue
             fi
 
             geometry="${monW}x${monH}+${monX}+${monY}"
-            [ $debug = true ] && echo "Found active monitor: ${monN}" >&2
+            [ "$debug" = true ] && echo "Found active monitor: ${monN}" >&2
             break
         done
 

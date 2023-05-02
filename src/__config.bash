@@ -1,3 +1,5 @@
+[ "$(basename -- "$0")" = "_config.bash" ] && ${debug:?}
+
 setup() {
     [ -d "$_CONFIG_DIR" ] || mkdir -p "$_CONFIG_DIR"
     [ -d "$_CACHE_DIR" ] || mkdir -p "$_CACHE_DIR"
@@ -15,13 +17,13 @@ setup() {
 }
 
 load_config() {
-    [ $debug = true ] && echo -e "\nLoading config from $_CONFIG_FILE..."
+    [ "$debug" = true ] && echo -e "\nLoading config from $_CONFIG_FILE..."
     # shellcheck disable=SC1090
     . "$_CONFIG_FILE"
 
     local errmsg="missing required config option."
     : "${server:?$errmsg}" "${username:?$errmsg}" "${password:?$errmsg}" "${savedir:?$errmsg}"
-    [ $debug = true ] && echo "Uploading to /${savedir} as ${username} on Nextcloud instance ${server}"
+    [ "$debug" = true ] && echo "Uploading to /${savedir} as ${username} on Nextcloud instance ${server}"
 
     hlColour="$(parse_colour "${hlColour:-255,100,180}")"
     link_previews=${link_previews:-false}
@@ -32,13 +34,13 @@ load_config() {
     rename=${rename,,}
     delay=${delay:-0}
 
-    if is_format "${cliFormat}"; then
+    if is_format "${cliFormat:-}"; then
         format="${cliFormat,,}"
     else
         is_format "${format}" && format="${format,,}" || format="png"
     fi
 
-    if [ $debug = true ]; then
+    if [ "$debug" = true ]; then
         echo -e "\nParsed config:"
         echo "  delay: ${delay}"
         echo "  format: ${format}"

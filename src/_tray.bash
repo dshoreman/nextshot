@@ -1,3 +1,5 @@
+[ "$(basename -- "$0")" = "_tray.bash" ] && ${savedir:?}
+
 tray_menu() {
     if [ -f "$_TRAY_FIFO.pid" ] && ps -p "$(<"$_TRAY_FIFO.pid")" > /dev/null 2>&1
     then
