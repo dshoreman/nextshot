@@ -94,7 +94,7 @@ update_aur() {
         && echo && git push && echo
 
     echo "AUR repo updated! Current version as seen in AUR:"
-    pacaur -Ss nextshot
+    yay -Ss nextshot
 }
 
 make && main "$@"
