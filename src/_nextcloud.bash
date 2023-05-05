@@ -22,17 +22,36 @@ make_url() {
         || echo "${server}/index.php${*}"
 }
 
+nc_overwrite_check() {
+    local reqUrl status
+
+    echo "Checking for file on Nextcloud..." >&2
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
+    status="$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" -X PROPFIND -so/dev/null)"
+
+    if [ ! "$status" = 404 ]; then
+        echo "File already exists! Continue with upload? [yN]" >&2
+        read -rn1 proceed && echo >&2
+
+        if [[ ! "${proceed,,}" =~ ^(y|yes)$ ]]; then
+            echo "Upload cancelled!" >&2 && exit 1
+        fi
+    fi
+
+    echo "$1"
+}
+
 nc_upload() {
-    local filename output respCode reqUrl url; read -r filename
+    local filename output proceed respCode reqUrl url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${filename// /%20}")"
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
     [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     [ "$debug" = true ] && echo "Sending request to ${reqUrl}..." >&2
 
-    respCode=$(curl -u "$username":"$password" "$reqUrl" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o "$output" -w "%{http_code}")
+    respCode=$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" \
+        --post301 --upload-file "$_CACHE_DIR/$filename" -# -o "$output")
 
     if [ "$respCode" = 204 ]; then
         [ "$debug" = true ] && echo "Expected 201 but server returned a 204 response" >&2
@@ -43,7 +62,7 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
-    url="$(make_url "/apps/gallery/#${savedir}/${filename}")"
+    url="$(make_url "/apps/gallery/#${savedir}/${1}")"
     echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
