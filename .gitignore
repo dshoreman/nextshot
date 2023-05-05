@@ -1,0 +1,6 @@
+*.md
+nextshot
+testfiles/
+!README.md
+!LICENSE.md
+!CHANGELOG.md

@@ -6,7 +6,7 @@ main() {
             update_aur ;;
         f|finish|finalise)
             action="${2:-release}"
-            newver="$(./nextshot.sh -V | grep -oP 'v\K.*')"
+            newver="$(./nextshot -V | grep -oP 'v\K.*')"
             finish_release ;;
         h|hot|hotfix)
             newver="$2" action="hotfix"
@@ -24,12 +24,12 @@ bump_version() {
     echo "| UPDATING FILES |"
     echo "+----------------+"
     echo
-    oldver="$(./nextshot.sh -V | awk '{ print $2 }')"
+    oldver="$(./nextshot -V | awk '{ print $2 }')"
     search="${oldver}\(...develop\)"
     today=$(date "+%Y-%m-%d")
 
     echo -n "Bumping version to ${newver}... "
-    sed -i "s/\(_VERSION=\)\".*\"$/\1\"${newver}\"/" nextshot.sh && echo "Done" || exit 1
+    sed -i "s/\(_VERSION=\)\".*\"$/\1\"${newver}\"/" src/main.bash && echo "Done" || exit 1
 
     # 1. Insert header for new version's changes
     # 2. Find the [Unreleased] link and add the new release diff below it
@@ -43,7 +43,7 @@ bump_version() {
     sed -i "s/^\(pkgver=\).*$/\1${newver}/" .aur/PKGBUILD && echo "Done" || exit 1
 
     echo
-    git add nextshot.sh CHANGELOG.md
+    git add src/main.bash CHANGELOG.md
     git commit -m "Bump version to ${newver}"
 
     echo
@@ -90,11 +90,11 @@ update_aur() {
     makepkg --printsrcinfo > .SRCINFO && echo -e "Done\n" || exit 1
 
     git add PKGBUILD .SRCINFO
-    git commit -m "Update to $(../nextshot.sh -V | awk '{print $2}')" \
+    git commit -m "Update to $(../nextshot -V | awk '{print $2}')" \
         && echo && git push && echo
 
     echo "AUR repo updated! Current version as seen in AUR:"
     pacaur -Ss nextshot
 }
 
-main "$@"
+make && main "$@"

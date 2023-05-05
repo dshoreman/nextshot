@@ -1,7 +1,17 @@
+SHELL = bash -eo pipefail
+GNU_SED := $(shell command -v gsed || command -v sed)
 PREFIX ?= /usr
 
 all:
-	@echo "To install Nextshot, run 'make install'."
+	@echo -n "Building Nextshot... "
+	@# Append safe files, strip empty lines and includes
+	@cat src/main.bash src/_[a-z]*.bash | $(GNU_SED) -e \
+		'/^\($$\|source ".*\.bash"$$\|SCRIPT_ROOT=\)/d' > nextshot
+	@# Append special files, retaining blank lines
+	@cat src/__*.bash >> nextshot
+	@# Move 'main' call to the end of the script
+	@$(GNU_SED) -i -e '/^main "$$@"$$/{H;d};$${p;x}' nextshot
+	@chmod +x nextshot && echo "Done!"
 
 install:
 	@echo "Preparing package structure"
