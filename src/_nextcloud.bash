@@ -23,7 +23,7 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local line1 line2 reqUrl status
+    local line1 line2 newname proceed reqUrl status
 
     echo "Checking for file on Nextcloud..." >&2
     reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
@@ -32,17 +32,42 @@ nc_overwrite_check() {
     if [ "$status" = 404 ]; then
         echo "$1" && return
     elif is_interactive; then
-        echo "File already exists! Continue with upload? [yN]" >&2
-        read -rn1 proceed && echo >&2
+        echo "File '$1' already exists!" >&2
 
-        if [[ "${proceed,,}" =~ ^(y|yes)$ ]]; then
-            echo "$1" && return
-        fi
+        while true; do case "$proceed" in
+            a|A)
+                break ;; #noop
+            r|R)
+                while [ -z "$newname" ]; do
+                    echo -n "  New filename: " >&2 && read -r newname
+                done
+
+                nc_overwrite_check "$newname" && return ;;
+            o|O)
+                echo "$1" && return ;;
+            *)
+                echo -n "  Press 'a' to abort, 'r' to rename, or 'o' to overwrite: " >&2
+                read -rn1 proceed && echo >&2 ;;
+        esac; done
     elif has yad; then
-        line1="The file '$1' already exists on NextCloud! <b>If you continue, it will be overwritten.</b>"
-        line2="Proceed with upload?"
-        if yad --title "NextCloud File Conflict" --text "\n${line1}\n\n${line2}"; then
-            echo "$1" && return
+        line1="The file <b>$1</b> already exists on NextCloud!"
+        line2="How would you like to proceed?"
+
+        if yad --title "NextCloud File Conflict" --text "\n${line1}\n\n${line2}\n" \
+            --button="Rename!document-edit:0" --button="Abort!dialog-cancel:1" \
+            --button="Overwrite!document-replace:2" --borders=10
+        then
+            while [ -z "$newname" ]; do
+                newname="$(yad --entry --title "Rename File" --button="Save!document-save" \
+                    --entry-text="$1" --text="\nEnter new filename:" --borders=10 2>/dev/null)"
+            done
+
+            nc_overwrite_check "$newname" && return
+        else
+            case "$?" in
+                2) echo "$1" && return ;;
+                1|70|252) ;; #noop
+            esac
         fi
     fi
 
