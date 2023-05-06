@@ -23,22 +23,30 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local reqUrl status
+    local line1 line2 reqUrl status
 
     echo "Checking for file on Nextcloud..." >&2
     reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
     status="$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" -X PROPFIND -so/dev/null)"
 
-    if [ ! "$status" = 404 ]; then
+    if [ "$status" = 404 ]; then
+        echo "$1" && return
+    elif is_interactive; then
         echo "File already exists! Continue with upload? [yN]" >&2
         read -rn1 proceed && echo >&2
 
-        if [[ ! "${proceed,,}" =~ ^(y|yes)$ ]]; then
-            echo "Upload cancelled!" >&2 && exit 1
+        if [[ "${proceed,,}" =~ ^(y|yes)$ ]]; then
+            echo "$1" && return
+        fi
+    elif has yad; then
+        line1="The file '$1' already exists on NextCloud! <b>If you continue, it will be overwritten.</b>"
+        line2="Proceed with upload?"
+        if yad --title "NextCloud File Conflict" --text "\n${line1}\n\n${line2}"; then
+            echo "$1" && return
         fi
     fi
 
-    echo "$1"
+    echo "Upload cancelled!" >&2 && exit 1
 }
 
 nc_upload() {
