@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* NextCloud uploads can now be aborted or renamed if they would overwrite another file
 
 
 ## [1.4.4] - 2023-05-05

@@ -22,17 +22,69 @@ make_url() {
         || echo "${server}/index.php${*}"
 }
 
+nc_overwrite_check() {
+    local line1 line2 newname proceed reqUrl status
+
+    echo "Checking for file on Nextcloud..." >&2
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
+    status="$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" -X PROPFIND -so/dev/null)"
+
+    if [ "$status" = 404 ]; then
+        echo "$1" && return
+    elif is_interactive; then
+        echo "File '$1' already exists!" >&2
+
+        while true; do case "$proceed" in
+            a|A)
+                break ;; #noop
+            r|R)
+                while [ -z "$newname" ]; do
+                    echo -n "  New filename: " >&2 && read -r newname
+                done
+
+                nc_overwrite_check "$newname" && return ;;
+            o|O)
+                echo "$1" && return ;;
+            *)
+                echo -n "  Press 'a' to abort, 'r' to rename, or 'o' to overwrite: " >&2
+                read -rn1 proceed && echo >&2 ;;
+        esac; done
+    elif has yad; then
+        line1="The file <b>$1</b> already exists on NextCloud!"
+        line2="How would you like to proceed?"
+
+        if yad --title "NextCloud File Conflict" --text "\n${line1}\n\n${line2}\n" \
+            --button="Rename!document-edit:0" --button="Abort!dialog-cancel:1" \
+            --button="Overwrite!document-replace:2" --borders=10
+        then
+            while [ -z "$newname" ]; do
+                newname="$(yad --entry --title "Rename File" --button="Save!document-save" \
+                    --entry-text="$1" --text="\nEnter new filename:" --borders=10 2>/dev/null)"
+            done
+
+            nc_overwrite_check "$newname" && return
+        else
+            case "$?" in
+                2) echo "$1" && return ;;
+                1|70|252) ;; #noop
+            esac
+        fi
+    fi
+
+    echo "Upload cancelled!" >&2 && exit 1
+}
+
 nc_upload() {
-    local filename output respCode reqUrl url; read -r filename
+    local filename output proceed respCode reqUrl url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${filename// /%20}")"
+    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
     [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
     [ "$debug" = true ] && echo "Sending request to ${reqUrl}..." >&2
 
-    respCode=$(curl -u "$username":"$password" "$reqUrl" \
-        -L --post301 --upload-file "$_CACHE_DIR/$filename" -#o "$output" -w "%{http_code}")
+    respCode=$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" \
+        --post301 --upload-file "$_CACHE_DIR/$filename" -# -o "$output")
 
     if [ "$respCode" = 204 ]; then
         [ "$debug" = true ] && echo "Expected 201 but server returned a 204 response" >&2
@@ -43,7 +95,7 @@ nc_upload() {
         echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
     fi
 
-    url="$(make_url "/apps/gallery/#${savedir}/${filename}")"
+    url="$(make_url "/apps/gallery/#${savedir}/${1}")"
     echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
