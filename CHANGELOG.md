@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.4.5] - 2023-05-07
+### Fixed
+* Updated Makefile to fix broken install in 1.4.4
+
+
 ## [1.4.4] - 2023-05-05
 ### Added
 * Updated troubleshooting in readme with fix for Slop+Picom blurring the screen
@@ -246,7 +251,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Copying link to clipboard on X11 and Wayland
 
 
-[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.4.4...develop
+[Unreleased]: https://github.com/dshoreman/nextshot/compare/v1.4.5...develop
+[1.4.5]: https://github.com/dshoreman/nextshot/compare/v1.4.4...v1.4.5
 [1.4.4]: https://github.com/dshoreman/nextshot/compare/v1.4.3...v1.4.4
 [1.4.3]: https://github.com/dshoreman/nextshot/compare/v1.4.2...v1.4.3
 [1.4.2]: https://github.com/dshoreman/nextshot/compare/v1.4.1...v1.4.2
