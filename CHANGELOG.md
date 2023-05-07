@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Fixed
+* Updated Makefile to fix broken install in 1.4.4
 
 
 ## [1.4.4] - 2023-05-05
