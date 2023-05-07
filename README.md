@@ -4,7 +4,7 @@
 
 [![GitHub release](https://img.shields.io/github/tag/dshoreman/nextshot.svg?label=release)](https://github.com/dshoreman/nextshot/releases)
 [![AUR version](https://img.shields.io/aur/version/nextshot.svg)][1]
-[![Build Status](https://travis-ci.com/dshoreman/nextshot.svg?branch=master)](https://travis-ci.com/dshoreman/nextshot)
+[![Build Status](https://img.shields.io/github/actions/workflow/status/dshoreman/nextshot/shellcheck.yaml?branch=develop)](https://github.com/dshoreman/nextshot/actions/workflows/shellcheck.yaml?query=branch%3Adevelop)
 [![GitHub issues](https://img.shields.io/github/issues/dshoreman/nextshot)][3]
 [![License](https://img.shields.io/github/license/dshoreman/nextshot)](LICENSE.md)
 
