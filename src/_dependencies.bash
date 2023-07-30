@@ -30,9 +30,10 @@ status_check() {
         "wl-copy        wl-clipboard to interact with the clipboard"
     )
     local reqX=(
-        "slop   slop        for window and area selection"
         "import imagemagick to take screenshots"
+        "slop   slop        for window and area selection"
         "xclip  xclip       to interact with the clipboard"
+        "bc     bc          for colour conversions in config"
     )
 
     echo

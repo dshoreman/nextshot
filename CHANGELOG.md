@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [Unreleased]
+### Added
+* `bc` is now included in the dependency check
+
+### Fixed
+* Fixed fallback to default hlColour when bc is missing
 
 
 ## [1.4.5] - 2023-05-07
