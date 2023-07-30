@@ -33,7 +33,7 @@ readonly _CONFIG_DIR="${XDG_CONFIG_HOME:-"$HOME/.config"}/nextshot"
 readonly _RUNTIME_DIR="${XDG_RUNTIME_DIR:-"/tmp"}/nextshot"
 readonly _CONFIG_FILE="$_CONFIG_DIR/nextshot.conf"
 readonly _TRAY_FIFO="$_RUNTIME_DIR/traymenu"
-readonly _VERSION="1.4.5"
+readonly _VERSION="1.4.6"
 
 source "${SCRIPT_ROOT}/_cache.bash"
 source "${SCRIPT_ROOT}/_capture.bash"

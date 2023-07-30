@@ -16,7 +16,11 @@ parse_colour() {
 
     if is_wayland; then
         echo "#$(int2hex "$red")$(int2hex "$green")$(int2hex "$blue")"
-    else
+    elif has bc; then
         echo "$(int2dec "$red"),$(int2dec "$green"),$(int2dec "$blue")"
+    else
+        prefers bc
+        echo -e "\nColour conversion unavailable, falling back to default.\n" >&2
+        echo "1,0.39,0.71"
     fi
 }
