@@ -19,7 +19,8 @@ Nextcloud (the default) so you can paste the public link in chats.
 From the start, the primary goal has been to work with both i3 and Sway. Since the release
 of  1.0, this has largely been achieved. While Nextshot will work on Sway and likely most
 X11-based environments, the nature of Wayland means extra work will be required for eventual
-compatibility with compositors other than Sway.
+compatibility with compositors other than Sway. Wayland on KDE works by using spectacle for 
+selection and capture.
 
 *TL;DR: YMMV*
 
@@ -56,6 +57,9 @@ sudo pacman -S --asdeps imagemagick slop xclip xdotool yad
 
 # To use in Sway
 sudo pacman -S --asdeps grim slurp wl-clipboard yad
+
+# To use in KDE w/ Wayland
+sudo pacman -S --asdeps wl-clipboard yad spectacle
 ```
 
 For more information on dependencies, run `nextshot --deps` after install.

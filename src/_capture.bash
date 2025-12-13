@@ -67,7 +67,13 @@ take_screenshot() {
     if [ "$mode" = "clipboard" ]; then
         from_clipboard > "$filepath"
     else
-        is_wayland && shoot="shoot_wayland" || shoot="shoot_x"
+        if is_wayland && is_plasma; then
+            shoot="shoot_wayland_plasma"
+        elif is_wayland; then
+            shoot="shoot_wayland"
+        else
+            shoot="shoot_x"
+        fi
 
         echo "Waiting for selection..." >&2
         $shoot "$filepath"
@@ -98,6 +104,26 @@ shoot_wayland() {
     requires grim
     delay_capture
     grim "${args[@]}" "$1"
+}
+
+shoot_wayland_plasma() {
+    local args
+    if [ "$mode" = "selection" ]; then
+        echo "After selection (and optional edits), press [ENTER] or click on 'Save' or 'Copy'." >&2
+        args=(-brn -o)
+    elif [ "$mode" = "monitor" ]; then
+        args=(-bmn -o)
+    elif [ "$mode" = "window" ]; then
+        args=(-ban -o)
+    elif [ "$mode" = "fullscreen" ]; then
+        args=(-bfn -o)
+    fi
+
+    spectacle "${args[@]}" "$1"
+
+    if [ ! -f "$1" ]; then
+        from_clipboard > "$1"
+    fi
 }
 
 shoot_x() {
