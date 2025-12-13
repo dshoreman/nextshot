@@ -36,6 +36,10 @@ is_wayland() {
     [ "$NEXTSHOT_ENV" = "wayland" ]
 }
 
+is_plasma() {
+    [ "$DESKTOP_SESSION" = "plasma" ]
+}
+
 is_wayland_detected() {
     [ -n "${WAYLAND_DISPLAY+x}" ]
 }
