@@ -3,9 +3,14 @@
     ${server:?} && ${username:?} && ${password:?}
 
 _curl() {
-    local options=(-u "$username":"$password" -Lw '%{http_code}')
+    local url options=(-u "$username":"$password" -Lw '%{http_code}')
 
-    curl "${options[@]}" "$@" "$(make_url "$_uri")"
+    case "$1" in
+        shares) url="ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" ;;
+        *) url="${1/dav:/remote.php/dav/files/${username}/${savedir}/}"
+    esac; shift
+
+    curl "${options[@]}" "$@" "$(make_url "$url")"
 }
 
 make_share_url() {
@@ -29,11 +34,10 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local line1 line2 newname proceed _uri status
+    local line1 line2 newname proceed status
 
     echo "Checking for file on Nextcloud..." >&2
-    _uri="remote.php/dav/files/${username}/${savedir}/${1// /%20}"
-    status="$(_curl -sX PROPFIND -o /dev/null)"
+    status="$(_curl dav:"${1// /%20}" -sX PROPFIND -o /dev/null)"
 
     if [ "$status" = 404 ]; then
         echo "$1" && return
@@ -81,15 +85,13 @@ nc_overwrite_check() {
 }
 
 nc_upload() {
-    local filename output proceed respCode _uri url; read -r filename
+    local filename output proceed respCode url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
-    _uri="remote.php/dav/files/${username}/${savedir}/${1// /%20}"
     [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
-    [ "$debug" = true ] && echo "Sending request to ${_uri}..." >&2
 
-    respCode="$(_curl -# --post301 --upload-file "$_CACHE_DIR/$filename" -o "$output")"
+    respCode="$(_curl dav:"${1// /%20}" -# --post301 --upload-file "$_CACHE_DIR/$filename" -o "$output")"
 
     if [ "$respCode" = 204 ]; then
         [ "$debug" = true ] && echo "Expected 201 but server returned a 204 response" >&2
@@ -110,8 +112,7 @@ nc_share() {
 
     [ "$debug" = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
-    _uri="ocs/v2.php/apps/files_sharing/api/v1/shares?format=json"
-    respCode="$(_curl -sSX POST --post301 -o "$_CACHE_DIR/share.json" \
+    respCode="$(_curl shares -sSX POST --post301 -o "$_CACHE_DIR/share.json" \
         -H "OCS-APIRequest: true" -F "path=/$savedir/$1" -F "shareType=3")"
 
     json="$(<"$_CACHE_DIR/share.json")"
