@@ -2,6 +2,12 @@
     ${link_previews:?} && ${pretty_urls:?} && ${savedir:?} && \
     ${server:?} && ${username:?} && ${password:?}
 
+_curl() {
+    local options=(-u "$username":"$password" -Lw '%{http_code}')
+
+    curl "${options[@]}" "$@" "$(make_url "$_uri")"
+}
+
 make_share_url() {
     local json suffix; read -r json
 
@@ -23,11 +29,11 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local line1 line2 newname proceed reqUrl status
+    local line1 line2 newname proceed _uri status
 
     echo "Checking for file on Nextcloud..." >&2
-    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
-    status="$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" -X PROPFIND -so/dev/null)"
+    _uri="remote.php/dav/files/${username}/${savedir}/${1// /%20}"
+    status="$(_curl -sX PROPFIND -o /dev/null)"
 
     if [ "$status" = 404 ]; then
         echo "$1" && return
@@ -75,16 +81,15 @@ nc_overwrite_check() {
 }
 
 nc_upload() {
-    local filename output proceed respCode reqUrl url; read -r filename
+    local filename output proceed respCode _uri url; read -r filename
 
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
+    _uri="remote.php/dav/files/${username}/${savedir}/${1// /%20}"
     [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
-    [ "$debug" = true ] && echo "Sending request to ${reqUrl}..." >&2
+    [ "$debug" = true ] && echo "Sending request to ${_uri}..." >&2
 
-    respCode=$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" \
-        --post301 --upload-file "$_CACHE_DIR/$filename" -# -o "$output")
+    respCode="$(_curl -# --post301 --upload-file "$_CACHE_DIR/$filename" -o "$output")"
 
     if [ "$respCode" = 204 ]; then
         [ "$debug" = true ] && echo "Expected 201 but server returned a 204 response" >&2
@@ -102,11 +107,12 @@ nc_upload() {
 
 nc_share() {
     local json respCode
+
     [ "$debug" = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
-    respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
-        "$(make_url "ocs/v2.php/apps/files_sharing/api/v1/shares?format=json")" \
-        -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
+    _uri="ocs/v2.php/apps/files_sharing/api/v1/shares?format=json"
+    respCode="$(_curl -sSX POST --post301 -o "$_CACHE_DIR/share.json" \
+        -H "OCS-APIRequest: true" -F "path=/$savedir/$1" -F "shareType=3")"
 
     json="$(<"$_CACHE_DIR/share.json")"
     [ "$debug" = true ] && echo -e "Nextcloud response:\n${json}\n" >&2
