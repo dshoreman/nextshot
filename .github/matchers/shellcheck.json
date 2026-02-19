@@ -1,7 +1,7 @@
 {
   "problemMatcher": [
     {
-      "owner": "shellcheck-gcc",
+      "owner": "shellcheck",
       "pattern": [
         {
           "regexp": "^(.+):(\\d+):(\\d+):\\s(warning|error):\\s(.*)\\s\\[(SC\\d+)\\]$",
@@ -13,9 +13,8 @@
           "code": 6
         }
       ]
-    },
-    {
-      "owner": "shellcheck-gcc-notice",
+    }, {
+      "owner": "shellcheck-notice",
       "severity": "notice",
       "pattern": [
         {

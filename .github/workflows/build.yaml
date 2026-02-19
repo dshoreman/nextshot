@@ -13,14 +13,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
       - name: Build Nextshot
         run: make
+      - run: npm install -g markdownlint-cli
+      - run: echo "::add-matcher::.github/matchers/markdownlint.json"
       - name: Install shellcheck
         run: >-
           sc=shellcheck archive=$sc-stable.linux.x86_64.tar.xz
           dlpath="https://github.com/koalaman/${sc}/releases/download/stable"
 
-          echo "::add-matcher::.github/problem-matcher-gcc.json";
+          echo "::add-matcher::.github/matchers/shellcheck.json";
           curl -L "${dlpath}/${archive}" -o ./sc.tar.xz && tar -xf $_ &&
           mv -v ./{${sc}-stable/,}$sc && echo "${sc^} $(./$sc -V | grep ^ver)"
+      - uses: tj-actions/changed-files@v47
+        id: cf
+      - run: markdownlint CHANGELOG.md
+        if: contains(steps.cf.outputs.all_changed_files, 'CHANGELOG')
+      - run: markdownlint README.md
+        if: always() && contains(steps.cf.outputs.all_changed_files, 'README')
       - run: ./shellcheck -P src -f gcc release src/*.bash
+        if: always()
