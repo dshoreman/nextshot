@@ -1,6 +1,6 @@
 [ "$(basename -- "$0")" = "_capture.bash" ] && \
     ${debug:?} && ${delay:?} && ${mode:?} && \
-    ${format:?} && ${rename:?}
+    ${format:?} && ${hlColour:?} && ${rename:?}
 
 attempt_rename() {
     local cmd newname
