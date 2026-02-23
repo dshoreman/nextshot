@@ -1,10 +1,10 @@
 {
   "problemMatcher": [
     {
-      "owner": "shellcheck-gcc",
+      "owner": "shellcheck",
       "pattern": [
         {
-          "regexp": "^\\.?\\/?(.+):(\\d+):(\\d+):\\s(warning|error):\\s(.*)\\s\\[(SC\\d+)\\]$",
+          "regexp": "^(.+):(\\d+):(\\d+):\\s(warning|error):\\s(.*)\\s\\[(SC\\d+)\\]$",
           "file": 1,
           "line": 2,
           "column": 3,
@@ -13,13 +13,12 @@
           "code": 6
         }
       ]
-    },
-    {
-      "owner": "shellcheck-gcc-notice",
+    }, {
+      "owner": "shellcheck-notice",
       "severity": "notice",
       "pattern": [
         {
-          "regexp": "^\\.?\\/?(.+):(\\d+):(\\d+):\\s(note):\\s(.*)\\s\\[(SC\\d+)\\]$",
+          "regexp": "^(.+):(\\d+):(\\d+):\\s(note):\\s(.*)\\s\\[(SC\\d+)\\]$",
           "file": 1,
           "line": 2,
           "column": 3,

@@ -5,6 +5,9 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write
+
 jobs:
   release-tagged:
     name: Build release
@@ -12,17 +15,20 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
       - name: Build Nextshot
         run: make
       - name: Generate Changelog
-        run: |
-          TAG="${GITHUB_REF_NAME//./\.}"
+        run: >-
+          TAG="${GITHUB_REF_NAME//./\.}";
           echo "Generating changelog for ${TAG}..."
-          sed -n "/^## \[${TAG/v/}\]/,/^## \[/{//b;p}" CHANGELOG.md > ${{ github.workspace }}-changes.md
+
+          sed -n "/^## \[${TAG/v/}\]/,/^## \[/{//b;p}" CHANGELOG.md
+          | tail -n+2 > ${{ github.workspace }}-changes.md
+
           cat ${{ github.workspace }}-changes.md
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
           body_path: ${{ github.workspace }}-changes.md
           files: nextshot
