@@ -106,7 +106,7 @@ usage() {
 }
 
 main() {
-    local debug=false image filename json ncfilename url
+    local step debug=false image filename json ncfilename url
     output_mode="nextcloud"
 
     check_bash_version && setup
@@ -126,9 +126,11 @@ main() {
         to_clipboard image < "$_CACHE_DIR/$image" && \
             send_notification "Your image is ready to paste!"
     else
+        step=uploading
         ncfilename="$(nc_overwrite_check "$image")"
         filename="$(echo "$image" | nc_upload "$ncfilename")"
 
+        step=sharing
         json=$(nc_share "$ncfilename")
         url="$(echo "$json" | make_share_url)"
 

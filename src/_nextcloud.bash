@@ -1,4 +1,4 @@
-[ "$(basename -- "$0")" = "_nextcloud.bash" ] && ${debug:?} && \
+[ "$(basename -- "$0")" = "_nextcloud.bash" ] && ${debug:?} && ${step:?} && \
     ${link_previews:?} && ${pretty_urls:?} && ${savedir:?} && \
     ${server:?} && ${username:?} && ${password:?}
 
@@ -22,7 +22,15 @@ _curl() {
     [[ $http_status = 000 || ,${expected}, = *",${http_status},"* ]] ||\
         err=", got ${http_status} response but expected ${expected//,//}"
     [[ $curl_status = 0 ]] || err+=" (curl ${curl_status})"
-    [[ -z $err ]] || echo "Request failed${err}" >&2
+
+    if [[ $err ]]; then
+        err="${req:-Request} failed${err}"
+        if has notify-send && ! is_interactive; then
+            notify-send -u critical -t 15000 -i dialog-error \
+                "Error ${step} screenshot" "$err"
+        fi
+        echo "$err" >&2
+    fi
 
     echo "$http_status"
     return $curl_status
@@ -49,7 +57,8 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local expected=207,404 line1 line2 newname proceed status
+    local req="Overwrite check" expected=207,404 \
+        line1 line2 newname proceed status
 
     echo "Checking for file on Nextcloud..." >&2
     status="$(_curl dav:"${1// /%20}" -X PROPFIND -o /dev/null)"
@@ -100,7 +109,7 @@ nc_overwrite_check() {
 }
 
 nc_upload() {
-    local expected=201,204 filename output proceed respCode url
+    local req=Upload expected=201,204 filename output proceed respCode url
 
     read -r filename
     echo -e "\nUploading screenshot..." >&2
