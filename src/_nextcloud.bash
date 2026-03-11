@@ -3,14 +3,24 @@
     ${server:?} && ${username:?} && ${password:?}
 
 _curl() {
-    local url options=(-u "$username":"$password" -Lw '%{http_code}')
+    local curl_status=0 err http_status url \
+        options=(-u "$username":"$password" -Lw '%{http_code}')
+    : "${expected:=200}"
 
     case "$1" in
         shares) url="ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" ;;
         *) url="${1/dav:/remote.php/dav/files/${username}/${savedir}/}"
-    esac; shift
+    esac; shift; url="$(make_url "$url")"
 
-    curl "${options[@]}" "$@" "$(make_url "$url")"
+    http_status="$(curl "${options[@]}" "$@" "$url")" || curl_status=$?
+
+    [[ $http_status = 000 || ,${expected}, = *",${http_status},"* ]] ||\
+        err=", got ${http_status} response but expected ${expected//,//}"
+    [[ $curl_status = 0 ]] || err+=" (curl ${curl_status})"
+    [[ -z $err ]] || echo "Request failed${err}" >&2
+
+    echo "$http_status"
+    return $curl_status
 }
 
 make_share_url() {
@@ -34,7 +44,7 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local line1 line2 newname proceed status
+    local expected=207,404 line1 line2 newname proceed status
 
     echo "Checking for file on Nextcloud..." >&2
     status="$(_curl dav:"${1// /%20}" -sX PROPFIND -o /dev/null)"
@@ -85,8 +95,9 @@ nc_overwrite_check() {
 }
 
 nc_upload() {
-    local filename output proceed respCode url; read -r filename
+    local expected=201,204 filename output proceed respCode url
 
+    read -r filename
     echo -e "\nUploading screenshot..." >&2
 
     [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
@@ -94,12 +105,11 @@ nc_upload() {
     respCode="$(_curl dav:"${1// /%20}" -# --post301 --upload-file "$_CACHE_DIR/$filename" -o "$output")"
 
     if [ "$respCode" = 204 ]; then
-        [ "$debug" = true ] && echo "Expected 201 but server returned a 204 response" >&2
         echo "File already exists and was overwritten" >&2
     elif [ "$respCode" -ne 201 ]; then
         echo >&2
         [ "$debug" = true ] && cat "$_CACHE_DIR/curlout" >&2
-        echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
+        echo "Upload failed" >&2 && exit 1
     fi
 
     url="$(make_url "/apps/gallery/#${savedir}/${1}")"
@@ -119,7 +129,7 @@ nc_share() {
     [ "$debug" = true ] && echo -e "Nextcloud response:\n${json}\n" >&2
 
     if [ "$respCode" -ne 200 ]; then
-        echo "Sharing failed. Expected 200 but server returned a $respCode response" >&2 && exit 1
+        echo "Sharing failed" >&2 && exit 1
     fi
 
     echo "$json"
