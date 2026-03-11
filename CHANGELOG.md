@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 * Improved handling of unexpected HTTP response codes
+* Always (and only) show curl errors in verbose/debug mode
 
 ## [1.4.6] - 2023-07-30
 

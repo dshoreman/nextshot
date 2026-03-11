@@ -12,6 +12,11 @@ _curl() {
         *) url="${1/dav:/remote.php/dav/files/${username}/${savedir}/}"
     esac; shift; url="$(make_url "$url")"
 
+    if [[ $* != *" -#"* ]]; then
+        [ "$debug" = true ] && options+=(-sS) || options+=(-s)
+    fi
+    [[ $* == *" -#"* || $* == *" -X POST "* ]] && options+=(--post301)
+
     http_status="$(curl "${options[@]}" "$@" "$url")" || curl_status=$?
 
     [[ $http_status = 000 || ,${expected}, = *",${http_status},"* ]] ||\
@@ -47,7 +52,7 @@ nc_overwrite_check() {
     local expected=207,404 line1 line2 newname proceed status
 
     echo "Checking for file on Nextcloud..." >&2
-    status="$(_curl dav:"${1// /%20}" -sX PROPFIND -o /dev/null)"
+    status="$(_curl dav:"${1// /%20}" -X PROPFIND -o /dev/null)"
 
     if [ "$status" = 404 ]; then
         echo "$1" && return
@@ -102,7 +107,7 @@ nc_upload() {
 
     [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
 
-    respCode="$(_curl dav:"${1// /%20}" -# --post301 --upload-file "$_CACHE_DIR/$filename" -o "$output")"
+    respCode="$(_curl dav:"${1// /%20}" -# --upload-file "$_CACHE_DIR/$filename" -o "$output")"
 
     if [ "$respCode" = 204 ]; then
         echo "File already exists and was overwritten" >&2
@@ -122,7 +127,7 @@ nc_share() {
 
     [ "$debug" = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
 
-    respCode="$(_curl shares -sSX POST --post301 -o "$_CACHE_DIR/share.json" \
+    respCode="$(_curl shares -X POST -o "$_CACHE_DIR/share.json" \
         -H "OCS-APIRequest: true" -F "path=/$savedir/$1" -F "shareType=3")"
 
     json="$(<"$_CACHE_DIR/share.json")"
