@@ -3,7 +3,8 @@
     ${server:?} && ${username:?} && ${password:?}
 
 _curl() {
-    local curl_status=0 err http_status url \
+    [[ ${http_status-x} != x ]] || local http_status echo_body=y
+    local body curl_status=0 err url \
         options=(-u "$username":"$password" -Lw '%{http_code}')
     : "${expected:=200}"
 
@@ -17,8 +18,11 @@ _curl() {
     fi
     [[ $* == *" -#"* || $* == *" -X POST "* ]] && options+=(--post301)
 
-    http_status="$(curl "${options[@]}" "$@" "$url")" || curl_status=$?
+    body="$(curl "${options[@]}" "$@" "$url")" || curl_status=$?
+    http_status=${body: -3}
+    body=${body::-3}
 
+    [[ $debug = true && -n "$body" ]] && echo -e "\nServer response:\n${body}\n" >&2
     [[ $http_status = 000 || ,${expected}, = *",${http_status},"* ]] ||\
         err=", got ${http_status} response but expected ${expected//,//}"
     [[ $curl_status = 0 ]] || err+=" (curl ${curl_status})"
@@ -29,10 +33,10 @@ _curl() {
             notify-send -u critical -t 15000 -i dialog-error \
                 "Error ${step} screenshot" "$err"
         fi
-        echo "$err" >&2
+        echo "$err" >&2 && exit 1
     fi
 
-    echo "$http_status"
+    [[ $echo_body ]] && echo "$body"
     return $curl_status
 }
 
@@ -57,13 +61,13 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local req="Overwrite check" expected=207,404 \
-        line1 line2 newname proceed status
+    local req="Overwrite check" expected=207,404 http_status='' \
+        line1 line2 newname proceed
 
     echo "Checking for file on Nextcloud..." >&2
-    status="$(_curl dav:"${1// /%20}" -X PROPFIND -o /dev/null)"
+    _curl dav:"${1// /%20}" -X PROPFIND
 
-    if [ "$status" = 404 ]; then
+    if [ "$http_status" = 404 ]; then
         echo "$1" && return
     elif is_interactive; then
         echo "File '$1' already exists!" >&2
@@ -109,42 +113,28 @@ nc_overwrite_check() {
 }
 
 nc_upload() {
-    local req=Upload expected=201,204 filename output proceed respCode url
+    local req=Upload expected=201,204 filename proceed url http_status=
 
     read -r filename
     echo -e "\nUploading screenshot..." >&2
 
-    [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
+    _curl dav:"${1// /%20}" -# --upload-file "$_CACHE_DIR/$filename"
 
-    respCode="$(_curl dav:"${1// /%20}" -# --upload-file "$_CACHE_DIR/$filename" -o "$output")"
+    case "$http_status" in
+        201) echo -n "Screenshot uploaded to " >&2 ;;
+        204) echo -n "Overwritten screenshot at " >&2 ;;
+    esac; make_url "/apps/gallery/#${savedir}/${1// /%20}" >&2
 
-    if [ "$respCode" = 204 ]; then
-        echo "File already exists and was overwritten" >&2
-    elif [ "$respCode" -ne 201 ]; then
-        echo >&2
-        [ "$debug" = true ] && cat "$_CACHE_DIR/curlout" >&2
-        echo "Upload failed" >&2 && exit 1
-    fi
-
-    url="$(make_url "/apps/gallery/#${savedir}/${1}")"
-    echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
 
 nc_share() {
-    local json respCode
+    local filename="$1"
 
-    [ "$debug" = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
-
-    respCode="$(_curl shares -X POST -o "$_CACHE_DIR/share.json" \
-        -H "OCS-APIRequest: true" -F "path=/$savedir/$1" -F "shareType=3")"
-
-    json="$(<"$_CACHE_DIR/share.json")"
-    [ "$debug" = true ] && echo -e "Nextcloud response:\n${json}\n" >&2
-
-    if [ "$respCode" -ne 200 ]; then
-        echo "Sharing failed" >&2 && exit 1
+    if [ "$debug" = true ]; then
+        echo -e "\nApplying share settings to ${savedir}/${filename}..." >&2
     fi
 
-    echo "$json"
+    _curl shares -X POST -H "OCS-APIRequest: true" \
+        -F "path=/${savedir}/${filename}" -F "shareType=3"
 }

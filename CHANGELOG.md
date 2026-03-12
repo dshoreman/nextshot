@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Prompt to abort/rename/continue if upload would overwrite a Nextcloud file
 * Send notification if errors happen while running from tray/keybind
 
+### Changed
+
+* Curl requests no longer create temporary files for their output
+
 ### Fixed
 
 * Improved handling of unexpected HTTP response codes
