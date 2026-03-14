@@ -126,11 +126,11 @@ main() {
         to_clipboard image < "$_CACHE_DIR/$image" && \
             send_notification "Your image is ready to paste!"
     else
-        step=uploading
+        step=upload
         ncfilename="$(nc_overwrite_check "$image")"
         filename="$(echo "$image" | nc_upload "$ncfilename")"
 
-        step=sharing
+        step=share
         json=$(nc_share "$ncfilename")
         url="$(echo "$json" | make_share_url)"
 

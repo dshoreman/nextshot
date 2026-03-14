@@ -4,8 +4,8 @@
 
 _curl() {
     [[ ${http_status-x} != x ]] || local http_status echo_body=y
-    local body curl_status=0 err url \
-        options=(-u "$username":"$password" -Lw '%{http_code}')
+    local body curl_status=0 err msg url \
+        options=(-u "$username":"$password" -Lw '\n%{errormsg}%{http_code}')
     : "${expected:=200}"
 
     case "$1" in
@@ -21,6 +21,8 @@ _curl() {
     body="$(curl "${options[@]}" "$@" "$url")" || curl_status=$?
     http_status=${body: -3}
     body=${body::-3}
+    detail=${body##*$'\n'}
+    body=${body%$'\n'*}
 
     [[ $debug = true && -n "$body" ]] && echo -e "\nServer response:\n${body}\n" >&2
     [[ $http_status = 000 || ,${expected}, = *",${http_status},"* ]] ||\
@@ -30,8 +32,9 @@ _curl() {
     if [[ $err ]]; then
         err="${req:-Request} failed${err}"
         if has notify-send && ! is_interactive; then
-            notify-send -u critical -t 15000 -i dialog-error \
-                "Error ${step} screenshot" "$err"
+            msg=$err; [ -z "$detail" ] || msg+="\n\n${detail}"
+            notify-send -u critical -t 20000 \
+                "Couldn't ${step} screenshot" "$msg"
         fi
         echo "$err" >&2 && exit 1
     fi
