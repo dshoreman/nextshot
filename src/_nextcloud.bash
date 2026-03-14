@@ -1,6 +1,47 @@
-[ "$(basename -- "$0")" = "_nextcloud.bash" ] && ${debug:?} && \
+[ "$(basename -- "$0")" = "_nextcloud.bash" ] && ${debug:?} && ${step:?} && \
     ${link_previews:?} && ${pretty_urls:?} && ${savedir:?} && \
     ${server:?} && ${username:?} && ${password:?}
+
+_curl() {
+    [[ ${http_status-x} != x ]] || local http_status echo_body=y
+    local body curl_status=0 err msg url \
+        options=(-u "$username":"$password" -Lw '\n%{errormsg}%{http_code}')
+    : "${expected:=200}"
+
+    case "$1" in
+        shares) url="ocs/v2.php/apps/files_sharing/api/v1/shares?format=json" ;;
+        *) url="${1/dav:/remote.php/dav/files/${username}/${savedir}/}"
+    esac; shift; url="$(make_url "$url")"
+
+    if [[ $* != *" -#"* ]]; then
+        [ "$debug" = true ] && options+=(-sS) || options+=(-s)
+    fi
+    [[ $* == *" -#"* || $* == *" -X POST "* ]] && options+=(--post301)
+
+    body="$(curl "${options[@]}" "$@" "$url")" || curl_status=$?
+    http_status=${body: -3}
+    body=${body::-3}
+    detail=${body##*$'\n'}
+    body=${body%$'\n'*}
+
+    [[ $debug = true && -n "$body" ]] && echo -e "\nServer response:\n${body}\n" >&2
+    [[ $http_status = 000 || ,${expected}, = *",${http_status},"* ]] ||\
+        err=", got ${http_status} response but expected ${expected//,//}"
+    [[ $curl_status = 0 ]] || err+=" (curl ${curl_status})"
+
+    if [[ $err ]]; then
+        err="${req:-Request} failed${err}"
+        if has notify-send && ! is_interactive; then
+            msg=$err; [ -z "$detail" ] || msg+="\n\n${detail}"
+            notify-send -u critical -t 20000 \
+                "Couldn't ${step} screenshot" "$msg"
+        fi
+        echo "$err" >&2 && exit 1
+    fi
+
+    [[ $echo_body ]] && echo "$body"
+    return $curl_status
+}
 
 make_share_url() {
     local json suffix; read -r json
@@ -23,13 +64,13 @@ make_url() {
 }
 
 nc_overwrite_check() {
-    local line1 line2 newname proceed reqUrl status
+    local req="Overwrite check" expected=207,404 http_status='' \
+        line1 line2 newname proceed
 
     echo "Checking for file on Nextcloud..." >&2
-    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
-    status="$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" -X PROPFIND -so/dev/null)"
+    _curl dav:"${1// /%20}" -X PROPFIND
 
-    if [ "$status" = 404 ]; then
+    if [ "$http_status" = 404 ]; then
         echo "$1" && return
     elif is_interactive; then
         echo "File '$1' already exists!" >&2
@@ -75,45 +116,28 @@ nc_overwrite_check() {
 }
 
 nc_upload() {
-    local filename output proceed respCode reqUrl url; read -r filename
+    local req=Upload expected=201,204 filename proceed url http_status=
 
+    read -r filename
     echo -e "\nUploading screenshot..." >&2
 
-    reqUrl="$(make_url "remote.php/dav/files/${username}/${savedir}/${1// /%20}")"
-    [ "$debug" = true ] && output="$_CACHE_DIR/curlout" || output=/dev/null
-    [ "$debug" = true ] && echo "Sending request to ${reqUrl}..." >&2
+    _curl dav:"${1// /%20}" -# --upload-file "$_CACHE_DIR/$filename"
 
-    respCode=$(curl -u "$username":"$password" "$reqUrl" -Lw "%{http_code}" \
-        --post301 --upload-file "$_CACHE_DIR/$filename" -# -o "$output")
+    case "$http_status" in
+        201) echo -n "Screenshot uploaded to " >&2 ;;
+        204) echo -n "Overwritten screenshot at " >&2 ;;
+    esac; make_url "/apps/gallery/#${savedir}/${1// /%20}" >&2
 
-    if [ "$respCode" = 204 ]; then
-        [ "$debug" = true ] && echo "Expected 201 but server returned a 204 response" >&2
-        echo "File already exists and was overwritten" >&2
-    elif [ "$respCode" -ne 201 ]; then
-        echo >&2
-        [ "$debug" = true ] && cat "$_CACHE_DIR/curlout" >&2
-        echo "Upload failed. Expected 201 but server returned a $respCode response" >&2 && exit 1
-    fi
-
-    url="$(make_url "/apps/gallery/#${savedir}/${1}")"
-    echo "Screenshot uploaded to ${url// /%20}" >&2
     echo "$filename"
 }
 
 nc_share() {
-    local json respCode
-    [ "$debug" = true ] && echo -e "\nApplying share settings to $savedir/$1..." >&2
+    local filename="$1"
 
-    respCode=$(curl -u "$username":"$password" -X POST --post301 -sSLH "OCS-APIRequest: true" \
-        "$(make_url "ocs/v2.php/apps/files_sharing/api/v1/shares?format=json")" \
-        -F "path=/$savedir/$1" -F "shareType=3" -o "$_CACHE_DIR/share.json" -w "%{http_code}")
-
-    json="$(<"$_CACHE_DIR/share.json")"
-    [ "$debug" = true ] && echo -e "Nextcloud response:\n${json}\n" >&2
-
-    if [ "$respCode" -ne 200 ]; then
-        echo "Sharing failed. Expected 200 but server returned a $respCode response" >&2 && exit 1
+    if [ "$debug" = true ]; then
+        echo -e "\nApplying share settings to ${savedir}/${filename}..." >&2
     fi
 
-    echo "$json"
+    _curl shares -X POST -H "OCS-APIRequest: true" \
+        -F "path=/${savedir}/${filename}" -F "shareType=3"
 }
